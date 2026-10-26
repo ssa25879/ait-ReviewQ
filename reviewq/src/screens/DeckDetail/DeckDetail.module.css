@@ -1,0 +1,13 @@
+.cardItem + .cardItem {
+  border-top: 1px solid var(--color-bg-canvas);
+}
+
+/* 질문 미리보기는 두 줄까지 */
+.question {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: pre-line;
+}

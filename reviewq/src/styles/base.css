@@ -13,7 +13,9 @@
 
 body {
   margin: 0;
-  font-family: "Tossface", -apple-system, system-ui, "Malgun Gothic", sans-serif;
+  /* Tossface의 unicode-range에 숫자(U+30-39)·#·*·©·®·™가 포함돼 있어 맨 앞에 두면 일반 숫자까지
+     이모지 글꼴로 그려진다. 텍스트 글꼴을 먼저 두고, 텍스트 글꼴에 없는 이모지는 Tossface가 맡는다 */
+  font-family: -apple-system, system-ui, "Malgun Gothic", "Tossface", sans-serif;
   word-break: keep-all;
   overflow-wrap: break-word;
   letter-spacing: 0;

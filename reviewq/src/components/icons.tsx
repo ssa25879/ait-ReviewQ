@@ -118,3 +118,14 @@ export function Search({ size = '1em' }: IconProps) {
     </svg>
   );
 }
+
+// 더보기(가로 점 3개) — 항목별 동작 목록을 여는 버튼에 쓴다
+export function More({ size = '1em' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <circle cx="5" cy="12" r="1.75" />
+      <circle cx="12" cy="12" r="1.75" />
+      <circle cx="19" cy="12" r="1.75" />
+    </svg>
+  );
+}

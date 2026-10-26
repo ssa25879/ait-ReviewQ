@@ -1,0 +1,137 @@
+/* 공용 버튼·입력·문구 스타일. 값은 src/styles/tokens.css 토큰만 쓴다 */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.primary {
+  composes: button;
+  background: var(--brand-primary);
+  color: var(--color-text-inverse);
+}
+
+.secondary {
+  composes: button;
+  background: var(--color-bg-canvas);
+  color: var(--color-text-default);
+}
+
+.danger {
+  composes: button;
+  background: var(--color-bg-canvas);
+  color: var(--color-danger);
+}
+
+/* 행 안의 보조 버튼(더보기 등) — 탭 영역 44px */
+.iconButton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text-subtle);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.fieldLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-subtitle);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--color-text-strong);
+}
+
+.counter {
+  font-size: var(--font-size-caption);
+  font-weight: 400;
+  color: var(--color-text-hint);
+}
+
+.counterOver {
+  composes: counter;
+  color: var(--color-danger);
+}
+
+.input {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-text-disabled);
+  border-radius: 12px;
+  background: var(--color-bg);
+  color: var(--color-text-strong);
+  font: inherit;
+  font-size: var(--font-size-body);
+}
+
+.input:focus {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.textarea {
+  composes: input;
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.error {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-danger);
+}
+
+.warning {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-warning);
+}
+
+/* 하단 고정 CTA 영역 — safe area 34px 확보 */
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3) var(--space-5) max(34px, env(safe-area-inset-bottom));
+  background: var(--color-bg);
+}
+
+.bottomBar > * {
+  width: 100%;
+  max-width: 432px;
+}
+
+/* 하단 고정 CTA에 콘텐츠가 가리지 않도록 화면 아래 여백 */
+.bottomSpacer {
+  height: 110px;
+}

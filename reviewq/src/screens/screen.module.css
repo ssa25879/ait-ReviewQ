@@ -1,0 +1,104 @@
+/* 화면 공용 레이아웃. 화면 제목은 본문 첫 요소로 둔다(상단 네비는 플랫폼이 그린다) */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-title);
+  color: var(--color-text-strong);
+}
+
+.meta {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-subtle);
+}
+
+.notice {
+  margin: 0;
+  padding: var(--space-6) 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-subtle);
+  text-align: center;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: 16px;
+  background: var(--color-bg-canvas);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.emptyBody {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-subtle);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 누르면 이동하는 행 */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3) 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-default);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowMain {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: var(--font-size-body);
+  color: var(--color-text-strong);
+}
+
+.rowSub {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-hint);
+}
+
+.rowChevron {
+  flex: none;
+  color: var(--color-text-hint);
+  font-size: 20px;
+}
