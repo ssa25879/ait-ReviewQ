@@ -34,3 +34,31 @@ export function deleteSubjectDetail({ decks, cards }: { decks: number; cards: nu
 export function deleteDeckDetail(cards: number): string {
   return cards === 0 ? '이 덱에는 카드가 없어요.' : `카드 ${cards}장도 함께 삭제돼요.`;
 }
+
+export function dueTodayLabel(count: number): string {
+  return count === 0 ? '오늘 복습할 카드가 없어요' : `오늘 복습 ${count}장`;
+}
+
+export const STUDY = {
+  start: '학습하기',
+  flipHint: '눌러서 정답 보기',
+  forget: '기억 못 함',
+  remember: '기억함',
+  backToDeck: '덱으로 돌아가기',
+  emptyTitle: '오늘 복습할 카드가 없어요',
+  emptyBody: '다음 복습일이 되면 이 덱에서 다시 학습할 수 있어요.',
+  doneTitle: '오늘 학습을 마쳤어요',
+  quitTitle: '학습을 그만할까요?',
+  quitDetail: '지금까지 판정한 카드는 저장됐어요.',
+  quitConfirm: '그만하기',
+};
+
+// 진행 표시 "1 / 3"을 스크린리더가 읽을 문장
+export function progressLabel(current: number, total: number): string {
+  return `${total}장 중 ${current}번째`;
+}
+
+// 기억함 비율(%). 완료 0장이면 0
+export function rememberedPercent(remembered: number, completed: number): number {
+  return completed === 0 ? 0 : Math.round((remembered / completed) * 100);
+}

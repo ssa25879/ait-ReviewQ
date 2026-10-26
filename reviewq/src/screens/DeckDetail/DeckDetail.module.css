@@ -11,3 +11,20 @@
   line-clamp: 2;
   white-space: pre-line;
 }
+
+.due {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+/* 하단 버튼 두 개(보조·주) */
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.actions > * {
+  flex: 1;
+}

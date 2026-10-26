@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { type Route, formatRoute, parseRoute, seedRoutes } from './router';
 import { RouteContext } from './routeContext';
 
@@ -20,9 +20,23 @@ const initialRoute = initHistory();
 
 export function RouterProvider({ children }: { children: ReactNode }) {
   const [route, setRoute] = useState<Route>(initialRoute);
+  const routeRef = useRef(route);
+  const leaveGuardRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    routeRef.current = route;
+  });
 
   useEffect(() => {
-    const onPopState = () => setRoute(parseRoute(window.location.hash));
+    const onPopState = () => {
+      const guard = leaveGuardRef.current;
+      if (guard) {
+        // 이미 한 단계 되돌아간 히스토리에 현재 화면을 다시 넣어 머문다
+        window.history.pushState(ENTRY, '', formatRoute(routeRef.current));
+        guard();
+        return;
+      }
+      setRoute(parseRoute(window.location.hash));
+    };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
@@ -40,6 +54,9 @@ export function RouterProvider({ children }: { children: ReactNode }) {
       },
       back() {
         window.history.back();
+      },
+      setLeaveGuard(guard: (() => void) | null) {
+        leaveGuardRef.current = guard;
       },
     }),
     [route],

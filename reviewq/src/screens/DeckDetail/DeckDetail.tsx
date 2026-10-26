@@ -2,8 +2,10 @@ import { useContent } from '../../app/contentContext';
 import { useRoute } from '../../app/routeContext';
 import { ChevronRight } from '../../components/icons';
 import ui from '../../components/ui.module.css';
+import { buildQueue } from '../../domain/queue';
 import { formatDueDate } from '../../domain/selectors';
 import { todayLocal } from '../../utils/date';
+import { STUDY, dueTodayLabel } from '../messages';
 import s from '../screen.module.css';
 import styles from './DeckDetail.module.css';
 
@@ -16,6 +18,8 @@ export function DeckDetail({ deckId }: { deckId: string }) {
   const subject = state.subjects.find((x) => x.id === deck.subjectId);
   const cards = state.cards[deckId] ?? [];
   const today = todayLocal();
+  const queue = buildQueue(state, today, { deckId });
+  const dueCount = queue.cards.length + queue.overflow;
 
   return (
     <main className={s.screen}>
@@ -24,6 +28,7 @@ export function DeckDetail({ deckId }: { deckId: string }) {
         <p className={s.meta}>
           {subject?.name} · 카드 {cards.length}장
         </p>
+        {cards.length > 0 && <p className={styles.due}>{dueTodayLabel(dueCount)}</p>}
       </header>
 
       {cards.length === 0 ? (
@@ -55,9 +60,20 @@ export function DeckDetail({ deckId }: { deckId: string }) {
 
       <div className={ui.bottomSpacer} />
       <div className={ui.bottomBar}>
-        <button type="button" className={ui.primary} onClick={() => navigate({ name: 'cardNew', deckId })}>
-          카드 추가
-        </button>
+        {dueCount > 0 ? (
+          <div className={styles.actions}>
+            <button type="button" className={ui.secondary} onClick={() => navigate({ name: 'cardNew', deckId })}>
+              카드 추가
+            </button>
+            <button type="button" className={ui.primary} onClick={() => navigate({ name: 'study', deckId })}>
+              {STUDY.start}
+            </button>
+          </div>
+        ) : (
+          <button type="button" className={ui.primary} onClick={() => navigate({ name: 'cardNew', deckId })}>
+            카드 추가
+          </button>
+        )}
       </div>
     </main>
   );

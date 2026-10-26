@@ -8,6 +8,7 @@ describe('parseRoute / formatRoute', () => {
     { name: 'deck', deckId: 'd1' },
     { name: 'cardNew', deckId: 'd1' },
     { name: 'cardEdit', deckId: 'd1', cardId: 'c1' },
+    { name: 'study', deckId: 'd1' },
   ];
 
   it.each(routes)('$name 경로는 해시로 바꿨다가 되돌려도 같다', (route) => {
@@ -16,9 +17,10 @@ describe('parseRoute / formatRoute', () => {
 
   it('형식', () => {
     expect(formatRoute({ name: 'cardEdit', deckId: 'd1', cardId: 'c1' })).toBe('#/deck/d1/card/c1');
+    expect(formatRoute({ name: 'study', deckId: 'd1' })).toBe('#/deck/d1/study');
   });
 
-  it.each(['', '#', '#/', '#/unknown', '#/deck', '#/deck/d1/x', '#/deck/d1/card'])('알 수 없는 해시 %j는 목록', (hash) => {
+  it.each(['', '#', '#/', '#/unknown', '#/deck', '#/deck/d1/x', '#/deck/d1/card', '#/deck/d1/studyx', '#/deck/d1/study/x'])('알 수 없는 해시 %j는 목록', (hash) => {
     expect(parseRoute(hash)).toEqual({ name: 'subjects' });
   });
 });
@@ -33,6 +35,10 @@ describe('seedRoutes', () => {
       { name: 'subjects' },
       { name: 'deck', deckId: 'd1' },
     ]);
+  });
+
+  it('학습 세션으로 시작하면 목록·덱 상세를 채운다', () => {
+    expect(seedRoutes({ name: 'study', deckId: 'd1' })).toEqual([{ name: 'subjects' }, { name: 'deck', deckId: 'd1' }]);
   });
 });
 
@@ -55,5 +61,7 @@ describe('routeTargetExists', () => {
     expect(routeTargetExists(state, { name: 'cardNew', deckId: 'd2' })).toBe(true);
     expect(routeTargetExists(state, { name: 'cardEdit', deckId: 'd1', cardId: 'c1' })).toBe(true);
     expect(routeTargetExists(state, { name: 'cardEdit', deckId: 'd1', cardId: 'c4' })).toBe(false);
+    expect(routeTargetExists(state, { name: 'study', deckId: 'd1' })).toBe(true);
+    expect(routeTargetExists(state, { name: 'study', deckId: 'nope' })).toBe(false);
   });
 });

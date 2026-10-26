@@ -4,6 +4,7 @@ import { useRoute } from "./app/routeContext";
 import { routeTargetExists } from "./app/router";
 import { CardEditor } from "./screens/CardEditor/CardEditor";
 import { DeckDetail } from "./screens/DeckDetail/DeckDetail";
+import { StudySession } from "./screens/Study/StudySession";
 import { SubjectList } from "./screens/SubjectList/SubjectList";
 import s from "./screens/screen.module.css";
 
@@ -43,6 +44,8 @@ function App() {
       return <CardEditor deckId={route.deckId} />;
     case "cardEdit":
       return <CardEditor deckId={route.deckId} cardId={route.cardId} />;
+    case "study":
+      return <StudySession key={route.deckId} deckId={route.deckId} />;
   }
 }
 

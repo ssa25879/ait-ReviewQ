@@ -1,0 +1,98 @@
+/* 카드 전체가 하나의 버튼. 긴 질문·정답은 줄바꿈을 지키고 카드 안에서 스크롤한다 */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 280px;
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  padding: var(--space-5);
+  border: 0;
+  border-radius: 20px;
+  background: var(--color-bg-canvas);
+  color: var(--color-text-strong);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.label {
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  color: var(--color-text-hint);
+}
+
+.text {
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.divider {
+  height: 1px;
+  margin: var(--space-2) 0;
+  background: var(--color-text-disabled);
+}
+
+.hint {
+  margin-top: auto;
+  padding-top: var(--space-5);
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-subtle);
+  text-align: center;
+}
+
+/* 하단 판정 버튼 두 개 좌우 배치 */
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.actions > * {
+  flex: 1;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-3);
+  border-radius: 16px;
+  background: var(--color-bg-canvas);
+  text-align: center;
+}
+
+.stat dt {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-subtle);
+}
+
+.stat dd {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-title);
+  color: var(--color-text-strong);
+}
+
+/* 화면에는 보이지 않고 스크린리더만 읽는다 */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

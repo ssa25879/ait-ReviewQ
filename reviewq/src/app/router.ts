@@ -1,11 +1,12 @@
 import type { ContentState } from '../domain/content';
 
-// 해시 기반 경로: #/ · #/deck/{deckId} · #/deck/{deckId}/card/new · #/deck/{deckId}/card/{cardId}
+// 해시 기반 경로: #/ · #/deck/{deckId} · #/deck/{deckId}/card/new · #/deck/{deckId}/card/{cardId} · #/deck/{deckId}/study
 export type Route =
   | { name: 'subjects' }
   | { name: 'deck'; deckId: string }
   | { name: 'cardNew'; deckId: string }
-  | { name: 'cardEdit'; deckId: string; cardId: string };
+  | { name: 'cardEdit'; deckId: string; cardId: string }
+  | { name: 'study'; deckId: string };
 
 const ROOT: Route = { name: 'subjects' };
 
@@ -15,6 +16,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] !== 'deck' || !parts[1]) return ROOT;
   const deckId = parts[1];
   if (parts.length === 2) return { name: 'deck', deckId };
+  if (parts.length === 3 && parts[2] === 'study') return { name: 'study', deckId };
   if (parts.length === 4 && parts[2] === 'card') {
     return parts[3] === 'new' ? { name: 'cardNew', deckId } : { name: 'cardEdit', deckId, cardId: parts[3] };
   }
@@ -31,6 +33,8 @@ export function formatRoute(route: Route): string {
       return `#/deck/${encodeURIComponent(route.deckId)}/card/new`;
     case 'cardEdit':
       return `#/deck/${encodeURIComponent(route.deckId)}/card/${encodeURIComponent(route.cardId)}`;
+    case 'study':
+      return `#/deck/${encodeURIComponent(route.deckId)}/study`;
   }
 }
 
@@ -43,6 +47,7 @@ export function seedRoutes(route: Route): Route[] {
       return [ROOT];
     case 'cardNew':
     case 'cardEdit':
+    case 'study':
       return [ROOT, { name: 'deck', deckId: route.deckId }];
   }
 }
