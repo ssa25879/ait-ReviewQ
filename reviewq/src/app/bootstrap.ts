@@ -9,7 +9,8 @@ export const appStorage = createAitStorage(Storage);
 
 // StrictMode의 effect 이중 실행과 무관하게 앱 시작 시 1회만 실행한다
 export const bootstrap = (async () => {
-  const meta = await initMeta({ storage: appStorage, today: todayLocal(), newId });
-  const content = await loadContent(appStorage);
+  const today = todayLocal();
+  const meta = await initMeta({ storage: appStorage, today, newId });
+  const content = await loadContent(appStorage, today);
   return { meta, content };
 })();

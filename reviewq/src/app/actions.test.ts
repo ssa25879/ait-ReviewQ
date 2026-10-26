@@ -18,3 +18,14 @@ describe('createActions', () => {
     expect(card.schedule).toMatchObject({ stage: 0, dueDate: '2026-10-26' });
   });
 });
+
+describe('reviewCard', () => {
+  it('세션 날짜·현재 시각·새 로그 id로 판정 액션을 만든다', () => {
+    const now = new Date(2026, 9, 27, 0, 1);
+    const a = createActions({ newId: () => 'log1', now: () => now });
+    expect(a.reviewCard('c1', 'd1', 'remember', '2026-10-26')).toEqual({
+      type: 'card/review', cardId: 'c1', deckId: 'd1', grade: 'remember', date: '2026-10-26',
+      now: now.toISOString(), logId: 'log1',
+    });
+  });
+});

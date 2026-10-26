@@ -42,3 +42,16 @@ describe('diffContent', () => {
     expect(remove.sort()).toEqual(['bq:cards:A', 'bq:cards:B']);
   });
 });
+
+describe('diffContent 로그', () => {
+  it('판정 1건은 해당 덱 카드 키와 bq:logs:2026-10만 저장한다', () => {
+    const prev = { ...seed(), logs: { '2026-10': [], '2026-09': [] } };
+    const next = contentReducer(prev, {
+      type: 'card/review', cardId: 'c1', deckId: 'A', grade: 'remember', date: '2026-10-26', now: T, logId: 'l1',
+    });
+    expect(diffContent(prev, next)).toEqual({
+      set: { 'bq:cards:A': next.cards.A, 'bq:logs:2026-10': next.logs['2026-10'] },
+      remove: [],
+    });
+  });
+});

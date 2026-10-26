@@ -154,3 +154,43 @@ describe('참조 유지', () => {
     expect(after.decks).toBe(before.decks);
   });
 });
+
+describe('판정 반영', () => {
+  const review = (cardId: string, deckId: string, grade: 'remember' | 'forget', date: string, logId: string): ContentAction => ({
+    type: 'card/review', cardId, deckId, grade, date, now: T0, logId,
+  });
+
+  it('판정하면 일정을 갱신하고 해당 월 로그에 1건을 남긴다', () => {
+    const before = seed();
+    const after = contentReducer(before, review('c1', 'd1', 'remember', '2026-10-26', 'l1'));
+    expect(after.cards.d1[0].schedule).toMatchObject({ stage: 1, dueDate: '2026-10-27', lastReviewedDate: '2026-10-26' });
+    expect(after.logs).toEqual({
+      '2026-10': [
+        { id: 'l1', cardId: 'c1', date: '2026-10-26', grade: 'remember', prevStage: 0, nextStage: 1, reviewedAt: T0 },
+      ],
+    });
+  });
+
+  it('같은 날 재판정은 상태 참조를 그대로 돌려주고 로그는 1건이다', () => {
+    const once = contentReducer(seed(), review('c1', 'd1', 'remember', '2026-10-26', 'l1'));
+    const twice = contentReducer(once, review('c1', 'd1', 'forget', '2026-10-26', 'l2'));
+    expect(twice).toBe(once);
+    expect(twice.logs['2026-10']).toHaveLength(1);
+  });
+
+  it('다른 덱 카드 배열과 다른 달 로그는 참조를 유지한다', () => {
+    const base = contentReducer(seed(), review('c3', 'd2', 'remember', '2026-09-30', 'l0'));
+    const after = contentReducer(base, review('c1', 'd1', 'forget', '2026-10-26', 'l1'));
+    expect(after.cards.d2).toBe(base.cards.d2);
+    expect(after.cards.d3).toBe(base.cards.d3);
+    expect(after.logs['2026-09']).toBe(base.logs['2026-09']);
+    expect(after.subjects).toBe(base.subjects);
+    expect(after.decks).toBe(base.decks);
+    expect(after.cards.d1).not.toBe(base.cards.d1);
+  });
+
+  it('없는 카드 판정은 상태를 그대로 돌려준다', () => {
+    const before = seed();
+    expect(contentReducer(before, review('zz', 'd1', 'remember', '2026-10-26', 'l1'))).toBe(before);
+  });
+});

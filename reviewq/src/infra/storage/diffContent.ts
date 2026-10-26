@@ -1,5 +1,5 @@
 import type { ContentState } from '../../domain/content';
-import { DECKS_KEY, SUBJECTS_KEY, cardsKey } from './keys';
+import { DECKS_KEY, SUBJECTS_KEY, cardsKey, logsKey } from './keys';
 
 export interface ContentChanges {
   set: Record<string, unknown>; // 저장할 키 → 직렬화 전 값
@@ -20,6 +20,13 @@ export function diffContent(prev: ContentState, next: ContentState): ContentChan
     }
     for (const deckId of Object.keys(prev.cards)) {
       if (!(deckId in next.cards)) remove.push(cardsKey(deckId));
+    }
+  }
+
+  // 로그 월 키는 삭제하지 않는다
+  if (prev.logs !== next.logs) {
+    for (const [month, logs] of Object.entries(next.logs)) {
+      if (prev.logs[month] !== logs) set[logsKey(month)] = logs;
     }
   }
   return { set, remove };

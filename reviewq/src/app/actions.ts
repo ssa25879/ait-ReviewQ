@@ -1,4 +1,5 @@
 import type { ContentAction } from '../domain/content';
+import type { Grade } from '../domain/scheduler/types';
 import { todayLocal } from '../utils/date';
 import { newId } from '../utils/id';
 
@@ -32,6 +33,10 @@ export function createActions(env: ActionEnv = defaultEnv) {
       type: 'card/update', id, deckId, question, answer, now: iso(),
     }),
     deleteCard: (id: string, deckId: string): ContentAction => ({ type: 'card/delete', id, deckId }),
+    // date는 세션 날짜. 자정이 지나도 세션 시작 날짜로 반영한다
+    reviewCard: (cardId: string, deckId: string, grade: Grade, date: string): ContentAction => ({
+      type: 'card/review', cardId, deckId, grade, date, now: iso(), logId: env.newId(),
+    }),
   };
 }
 
