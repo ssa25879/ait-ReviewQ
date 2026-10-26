@@ -1,0 +1,6 @@
+node_modules/
+
+# 환경 변수 파일(실제 광고 그룹 ID 등)은 커밋하지 않는다. 예시 파일만 허용
+.env
+.env.*
+!.env.example
