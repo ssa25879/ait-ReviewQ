@@ -1,20 +1,4 @@
-import { Storage } from "@apps-in-toss/web-framework";
 import "./App.css";
-import { createAitStorage } from "./infra/storage/aitStorage";
-import { initMeta } from "./infra/storage/meta";
-import { todayLocal } from "./utils/date";
-import { newId } from "./utils/id";
-
-// StrictMode의 effect 이중 실행과 무관하게 앱 시작 시 1회만 실행한다
-const metaReady = initMeta({ storage: createAitStorage(Storage), today: todayLocal(), newId });
-metaReady.then(
-  (meta) => {
-    if (import.meta.env.DEV) console.info("[reviewq] meta", meta);
-  },
-  (error: unknown) => {
-    console.error("[reviewq] meta 초기화 실패", error);
-  },
-);
 
 function App() {
   return (
