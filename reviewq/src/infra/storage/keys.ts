@@ -4,6 +4,8 @@ export const META_KEY = `${PREFIX}meta`;
 export const SUBJECTS_KEY = `${PREFIX}subjects`;
 export const DECKS_KEY = `${PREFIX}decks`;
 export const BACKUP_KEY = `${PREFIX}backup:last`;
+// 백업 가져오기·데모 데이터로 바꾸기 직전의 데이터(내보내기 형식)
+export const BEFORE_IMPORT_KEY = `${PREFIX}backup:beforeImport`;
 
 export function cardsKey(deckId: string): string {
   return `${PREFIX}cards:${deckId}`;

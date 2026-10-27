@@ -28,3 +28,8 @@
 .actions > * {
   flex: 1;
 }
+
+/* 여러 장 추가 진입 행 */
+.bulkRow {
+  border-bottom: 1px solid var(--color-bg-canvas);
+}

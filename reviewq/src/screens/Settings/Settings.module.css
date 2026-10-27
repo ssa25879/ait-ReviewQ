@@ -65,3 +65,33 @@
   line-height: 1.4;
   white-space: pre;
 }
+
+/* 백업 가져오기 펼침 영역 */
+.importPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-bg-canvas);
+}
+
+.subTitle {
+  margin: 0;
+  font-size: var(--font-size-subtitle);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--color-text-strong);
+}
+
+/* 파일 입력은 버튼으로 연다(기본 입력 모양은 숨김) */
+.fileInput {
+  display: none;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: 12px;
+  background: var(--color-bg-canvas);
+}

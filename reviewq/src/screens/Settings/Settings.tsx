@@ -1,5 +1,5 @@
 import { File as AitFile, isMinVersionSupported } from '@apps-in-toss/web-framework';
-import { useId, useRef, useState } from 'react';
+import { Suspense, lazy, useId, useRef, useState } from 'react';
 import { appStorage, metaStore } from '../../app/bootstrap';
 import { useContent } from '../../app/contentContext';
 import { useRoute } from '../../app/routeContext';
@@ -8,8 +8,9 @@ import { ConfirmDialog } from '../../components/Dialog';
 import ui from '../../components/ui.module.css';
 import { useNotificationAgreement } from '../../components/useNotificationAgreement';
 import { buildExport, exportFileName, toBase64Utf8, validateExport } from '../../infra/storage/exportData';
+import { type ParsedImport, parseImport } from '../../infra/storage/importData';
 import { SCHEMA_VERSION } from '../../infra/storage/meta';
-import { EXPORT, NOTIFY, SETTINGS } from '../messages';
+import { EXPORT, IMPORT, NOTIFY, SETTINGS } from '../messages';
 import s from '../screen.module.css';
 import styles from './Settings.module.css';
 
@@ -17,6 +18,9 @@ import styles from './Settings.module.css';
 function canSaveFile(): boolean {
   return AitFile.saveBase64.isSupported() && isMinVersionSupported(AitFile.saveBase64.MIN_TOSS_APP_VERSION);
 }
+
+// 테스트 빌드에서만 데모 데이터 항목을 불러온다. 조건을 이 자리의 상수식으로 써야 꺼진 빌드에서 모듈이 번들에서 빠진다
+const DemoSection = import.meta.env.VITE_DEMO_DATA === 'true' ? lazy(() => import('./DemoSection')) : null;
 
 // 조회·관리 화면이라 하단 고정 버튼이 없다(뒤로가기는 플랫폼)
 export function Settings() {
@@ -36,6 +40,11 @@ export function Settings() {
       <ExportSection />
       <NotificationSection />
       <ClearSection />
+      {DemoSection && (
+        <Suspense fallback={null}>
+          <DemoSection />
+        </Suspense>
+      )}
     </main>
   );
 }
@@ -120,7 +129,139 @@ function ExportSection() {
           <p className={styles.hint}>{EXPORT.copyHint}</p>
         </>
       )}
+      <ImportPanel />
     </section>
+  );
+}
+
+type ImportStep = 'closed' | 'open' | 'confirm' | 'final' | 'replacing';
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+
+// 백업 가져오기: 파일 선택(토스 WebView에서 열리지 않을 수 있어) 또는 붙여넣기 → 검증·요약 → 2단계 확인 → 전체 교체
+function ImportPanel() {
+  const { replaceAll } = useContent();
+  const { back } = useRoute();
+  const [step, setStep] = useState<ImportStep>('closed');
+  const [text, setText] = useState('');
+  const [parsed, setParsed] = useState<ParsedImport | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const workingRef = useRef(false);
+  const textId = useId();
+
+  const check = (raw: string) => {
+    const result = parseImport(raw);
+    setParsed(result);
+    setMessage(result.ok ? null : IMPORT[result.reason]);
+  };
+
+  const onFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      check(await file.text());
+    } catch (error) {
+      console.error('[reviewq] 백업 파일 읽기 실패', error);
+      setParsed(null);
+      setMessage(IMPORT.readFailed);
+    } finally {
+      if (fileRef.current) fileRef.current.value = ''; // 같은 파일을 다시 골라도 change가 오게
+    }
+  };
+
+  const replace = async () => {
+    if (!parsed?.ok || workingRef.current) return;
+    workingRef.current = true;
+    setStep('replacing');
+    try {
+      await replaceAll(parsed.doc);
+      back(); // 설정 아래에는 항상 홈이 있다(seed)
+    } catch (error) {
+      console.error('[reviewq] 백업 가져오기 실패', error);
+      setMessage(IMPORT.failed);
+      setStep('open');
+    } finally {
+      workingRef.current = false;
+    }
+  };
+
+  if (step === 'closed') {
+    return (
+      <button type="button" className={ui.secondary} onClick={() => setStep('open')}>
+        {IMPORT.action}
+      </button>
+    );
+  }
+
+  return (
+    <div className={styles.importPanel}>
+      <h3 className={styles.subTitle}>{IMPORT.action}</h3>
+      <p className={styles.body}>{IMPORT.description}</p>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".json,application/json"
+        className={styles.fileInput}
+        onChange={(e) => void onFile(e.target.files?.[0])}
+      />
+      <button type="button" className={ui.secondary} onClick={() => fileRef.current?.click()}>
+        {IMPORT.pickFile}
+      </button>
+      <label htmlFor={textId} className={ui.fieldLabel}>
+        {IMPORT.pasteLabel}
+      </label>
+      <textarea
+        id={textId}
+        className={ui.textarea}
+        value={text}
+        onChange={(e) => {
+          // 다시 불러오기 전까지는 이전 요약으로 바꾸지 않게 결과를 지운다
+          setText(e.target.value);
+          setParsed(null);
+          setMessage(null);
+        }}
+      />
+      <button type="button" className={ui.secondary} disabled={text.trim() === ''} onClick={() => check(text)}>
+        {IMPORT.load}
+      </button>
+      {message && (
+        <p className={ui.error} role="alert">
+          {message}
+        </p>
+      )}
+      {parsed?.ok && (
+        <>
+          <div className={styles.summary} role="status">
+            <p className={styles.body}>{IMPORT.summary(parsed.summary)}</p>
+            <p className={styles.hint}>{IMPORT.exportedAt(formatDate(parsed.summary.exportedAt))}</p>
+          </div>
+          <button type="button" className={ui.danger} disabled={step === 'replacing'} onClick={() => setStep('confirm')}>
+            {step === 'replacing' ? IMPORT.replacing : IMPORT.replace}
+          </button>
+        </>
+      )}
+      {step === 'confirm' && (
+        <ConfirmDialog
+          title={IMPORT.confirmTitle}
+          detail={IMPORT.confirmBody}
+          confirmLabel={IMPORT.confirmContinue}
+          onConfirm={() => setStep('final')}
+          onClose={() => setStep('open')}
+        />
+      )}
+      {step === 'final' && (
+        <ConfirmDialog
+          title={IMPORT.finalTitle}
+          detail={IMPORT.finalBody}
+          confirmLabel={IMPORT.finalConfirm}
+          onConfirm={replace}
+          onClose={() => setStep('open')}
+        />
+      )}
+    </div>
   );
 }
 

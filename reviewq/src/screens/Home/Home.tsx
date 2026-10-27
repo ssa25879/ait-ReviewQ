@@ -1,16 +1,20 @@
+import { useRef } from 'react';
+import { actions } from '../../app/actions';
 import { useContent } from '../../app/contentContext';
 import { useRoute } from '../../app/routeContext';
 import { useToday } from '../../app/todayContext';
 import { ChevronRight } from '../../components/icons';
 import ui from '../../components/ui.module.css';
+import type { ContentAction } from '../../domain/content';
 import { buildQueue } from '../../domain/queue';
+import { SAMPLE_CARDS, SAMPLE_DECK, SAMPLE_SUBJECT } from '../../domain/sampleDeck';
 import { dueCountBySubject, overdueCount } from '../../domain/selectors';
 import { HOME, SETTINGS, STATS, clockWarning, overflowNotice } from '../messages';
 import s from '../screen.module.css';
 import styles from './Home.module.css';
 
 export function Home() {
-  const { state } = useContent();
+  const { state, dispatch } = useContent();
   const { navigate } = useRoute();
   const { today, clockRolledBack, lastOpenedDate } = useToday();
 
@@ -21,6 +25,17 @@ export function Home() {
   const overdue = overdueCount(state, today);
   const bySubject = dueCountBySubject(state, today);
   const goSubjects = () => navigate({ name: 'subjects' });
+  // 카드가 생기면 첫 사용 상태가 끝나 버튼이 사라진다. 그 전 연타는 ref로 막는다
+  const sampleRef = useRef(false);
+  const addSample = () => {
+    if (sampleRef.current) return;
+    sampleRef.current = true;
+    const subject = actions.addSubject(SAMPLE_SUBJECT) as Extract<ContentAction, { type: 'subject/add' }>;
+    const deck = actions.addDeck(subject.id, SAMPLE_DECK) as Extract<ContentAction, { type: 'deck/add' }>;
+    dispatch(subject);
+    dispatch(deck);
+    for (const [question, answer] of SAMPLE_CARDS) dispatch(actions.addCard(deck.id, question, answer));
+  };
 
   return (
     <main className={s.screen}>
@@ -32,6 +47,10 @@ export function Home() {
         <section className={s.empty}>
           <p className={s.emptyTitle}>{HOME.firstTitle}</p>
           <p className={s.emptyBody}>{HOME.firstBody}</p>
+          <button type="button" className={`${ui.secondary} ${styles.sampleButton}`} onClick={addSample}>
+            {HOME.sample}
+          </button>
+          <p className={s.emptyBody}>{HOME.sampleHint}</p>
         </section>
       ) : dueCount === 0 ? (
         <section className={s.empty}>

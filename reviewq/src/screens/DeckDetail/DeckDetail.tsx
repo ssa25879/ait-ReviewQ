@@ -5,7 +5,7 @@ import { ChevronRight } from '../../components/icons';
 import ui from '../../components/ui.module.css';
 import { buildQueue } from '../../domain/queue';
 import { formatDueDate } from '../../domain/selectors';
-import { STUDY, dueTodayLabel, overflowNotice } from '../messages';
+import { BULK, STUDY, dueTodayLabel, overflowNotice } from '../messages';
 import s from '../screen.module.css';
 import styles from './DeckDetail.module.css';
 
@@ -20,6 +20,17 @@ export function DeckDetail({ deckId }: { deckId: string }) {
   const cards = state.cards[deckId] ?? [];
   const queue = buildQueue(state, today, { deckId });
   const dueCount = queue.cards.length + queue.overflow;
+  // 목록 위(빈 덱이면 안내 아래)에 둔다. 하단 버튼 구성은 그대로다
+  const bulkRow = (
+    <button type="button" className={`${s.row} ${styles.bulkRow}`} onClick={() => navigate({ name: 'cardBulk', deckId })}>
+      <span className={s.rowMain}>
+        <span className={s.rowTitle}>{BULK.entry}</span>
+      </span>
+      <span className={s.rowChevron}>
+        <ChevronRight />
+      </span>
+    </button>
+  );
 
   return (
     <main className={s.screen}>
@@ -33,30 +44,36 @@ export function DeckDetail({ deckId }: { deckId: string }) {
       </header>
 
       {cards.length === 0 ? (
-        <section className={s.empty}>
-          <p className={s.emptyTitle}>아직 카드가 없어요</p>
-          <p className={s.emptyBody}>질문과 정답을 적어 첫 카드를 만들어 보세요.</p>
-        </section>
+        <>
+          <section className={s.empty}>
+            <p className={s.emptyTitle}>아직 카드가 없어요</p>
+            <p className={s.emptyBody}>질문과 정답을 적어 첫 카드를 만들어 보세요.</p>
+          </section>
+          {bulkRow}
+        </>
       ) : (
-        <ul className={s.list}>
-          {cards.map((card) => (
-            <li key={card.id} className={styles.cardItem}>
-              <button
-                type="button"
-                className={s.row}
-                onClick={() => navigate({ name: 'cardEdit', deckId, cardId: card.id })}
-              >
-                <span className={s.rowMain}>
-                  <span className={`${s.rowTitle} ${styles.question}`}>{card.question}</span>
-                  <span className={s.rowSub}>다음 복습 {formatDueDate(card.schedule.dueDate, today)}</span>
-                </span>
-                <span className={s.rowChevron}>
-                  <ChevronRight />
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          {bulkRow}
+          <ul className={s.list}>
+            {cards.map((card) => (
+              <li key={card.id} className={styles.cardItem}>
+                <button
+                  type="button"
+                  className={s.row}
+                  onClick={() => navigate({ name: 'cardEdit', deckId, cardId: card.id })}
+                >
+                  <span className={s.rowMain}>
+                    <span className={`${s.rowTitle} ${styles.question}`}>{card.question}</span>
+                    <span className={s.rowSub}>다음 복습 {formatDueDate(card.schedule.dueDate, today)}</span>
+                  </span>
+                  <span className={s.rowChevron}>
+                    <ChevronRight />
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       <div className={ui.bottomSpacer} />

@@ -1,6 +1,7 @@
 import { type Dispatch, createContext, useContext } from 'react';
 import type { ContentAction, ContentState } from '../domain/content';
 import type { Backup } from '../infra/storage/backup';
+import type { ExportDoc } from '../infra/storage/exportData';
 
 export type LoadStatus = 'loading' | 'ready' | 'corrupt' | 'readFailed';
 
@@ -22,6 +23,9 @@ export interface ContentContextValue {
   flushSave: () => Promise<void>; // 저장 대기 중인 변경을 바로 저장한다(내보내기 전)
   // 저장 대기 변경을 버리고 앱 저장소를 모두 지운 뒤 빈 상태로 다시 불러온다. 지우지 못하면 저장소를 다시 읽고 예외를 던진다
   clearAll: () => Promise<void>;
+  // 저장 대기 변경을 버리고 과목·덱·카드·판정 기록을 문서 내용으로 바꾼 뒤 다시 불러온다(백업 가져오기·데모 데이터).
+  // 실패하면 저장소를 다시 읽고 예외를 던진다
+  replaceAll: (doc: ExportDoc) => Promise<void>;
 }
 
 export const ContentContext = createContext<ContentContextValue | null>(null);

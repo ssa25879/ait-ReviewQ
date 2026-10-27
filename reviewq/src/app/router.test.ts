@@ -12,6 +12,7 @@ describe('parseRoute / formatRoute', () => {
     { name: 'deck', deckId: 'd1' },
     { name: 'cardNew', deckId: 'd1' },
     { name: 'cardEdit', deckId: 'd1', cardId: 'c1' },
+    { name: 'cardBulk', deckId: 'd1' },
     { name: 'study', deckId: 'd1' },
   ];
 
@@ -27,10 +28,11 @@ describe('parseRoute / formatRoute', () => {
     expect(formatRoute({ name: 'settings' })).toBe('#/settings');
     expect(formatRoute({ name: 'cardEdit', deckId: 'd1', cardId: 'c1' })).toBe('#/deck/d1/card/c1');
     expect(formatRoute({ name: 'study', deckId: 'd1' })).toBe('#/deck/d1/study');
+    expect(formatRoute({ name: 'cardBulk', deckId: 'd1' })).toBe('#/deck/d1/cards/bulk');
   });
 
   it.each([
-    '', '#', '#/', '#/unknown', '#/subjects/x', '#/study/x', '#/statsx', '#/stats/x', '#/settingsx', '#/settings/x', '#/deck', '#/deck/d1/x', '#/deck/d1/card', '#/deck/d1/studyx', '#/deck/d1/study/x',
+    '', '#', '#/', '#/unknown', '#/subjects/x', '#/study/x', '#/statsx', '#/stats/x', '#/settingsx', '#/settings/x', '#/deck', '#/deck/d1/x', '#/deck/d1/card', '#/deck/d1/studyx', '#/deck/d1/study/x', '#/deck/d1/cards', '#/deck/d1/cards/x', '#/deck/d1/cards/bulk/x',
   ])('알 수 없는 해시 %j는 홈', (hash) => {
     expect(parseRoute(hash)).toEqual({ name: 'home' });
   });
@@ -54,6 +56,14 @@ describe('seedRoutes', () => {
 
   it('카드 편집으로 시작하면 홈·목록·덱 상세를 채운다', () => {
     expect(seedRoutes({ name: 'cardEdit', deckId: 'd1', cardId: 'c1' })).toEqual([
+      { name: 'home' },
+      { name: 'subjects' },
+      { name: 'deck', deckId: 'd1' },
+    ]);
+  });
+
+  it('여러 장 추가로 시작하면 홈·목록·덱 상세를 채운다', () => {
+    expect(seedRoutes({ name: 'cardBulk', deckId: 'd1' })).toEqual([
       { name: 'home' },
       { name: 'subjects' },
       { name: 'deck', deckId: 'd1' },

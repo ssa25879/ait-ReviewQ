@@ -220,6 +220,7 @@ try {
   check('최초 화면 #/ = 홈', (await hash()) === '#/' && (await h1()) === '오늘 복습', await hash());
   check('카드 0장 → 첫 사용 안내', (await text()).includes('복습큐를 시작해 볼까요?'));
   check('카드 0장 → 과목·덱 만들기 버튼·학습 시작 없음', (await hasButton('과목·덱 만들기')) && !(await hasButton('학습 시작')));
+  check('카드 0장 → 예시 카드로 둘러보기 버튼', await hasButton('예시 카드로 둘러보기'));
   check('진입 시 대화상자 없음', !(await dialogShown()));
   await audit('홈 첫 사용'); await shot('home-first');
   await click('과목·덱 만들기');

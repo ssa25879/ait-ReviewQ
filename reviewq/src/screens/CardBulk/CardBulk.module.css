@@ -1,0 +1,79 @@
+/* 형식 안내와 예시 */
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: 16px;
+  background: var(--color-bg-canvas);
+}
+
+.helpText {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-default);
+  word-break: keep-all;
+}
+
+.example {
+  margin: 0;
+  font-family: ui-monospace, monospace;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-subtle);
+  white-space: pre-wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  min-height: 240px;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.added {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-success);
+  word-break: keep-all;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.summary {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.errorCount {
+  color: var(--color-danger);
+}
+
+.errors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.errorItem {
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-default);
+  word-break: keep-all;
+}
+
+.errorLine {
+  font-weight: 600;
+  color: var(--color-danger);
+}

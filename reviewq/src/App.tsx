@@ -3,6 +3,7 @@ import { useContent } from "./app/contentContext";
 import { useRoute } from "./app/routeContext";
 import { type Route, routeTargetExists } from "./app/router";
 import { SaveErrorNotice } from "./components/SaveErrorNotice";
+import { CardBulk } from "./screens/CardBulk/CardBulk";
 import { CardEditor } from "./screens/CardEditor/CardEditor";
 import { DeckDetail } from "./screens/DeckDetail/DeckDetail";
 import { Home } from "./screens/Home/Home";
@@ -54,6 +55,8 @@ function Screen({ route }: { route: Route }) {
       return <CardEditor deckId={route.deckId} />;
     case "cardEdit":
       return <CardEditor deckId={route.deckId} cardId={route.cardId} />;
+    case "cardBulk":
+      return <CardBulk deckId={route.deckId} />;
     case "study":
       return <StudySession key={route.deckId} deckId={route.deckId} />;
     case "studyAll":

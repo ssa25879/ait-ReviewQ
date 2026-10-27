@@ -1,9 +1,13 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { type ContentAction, type ContentState, contentReducer, emptyContent } from '../domain/content';
 import { diffContent } from '../infra/storage/diffContent';
+import type { ExportDoc } from '../infra/storage/exportData';
+import { importBackup } from '../infra/storage/importData';
+import { SCHEMA_VERSION } from '../infra/storage/meta';
 import { canRestoreFromBackup } from '../infra/storage/recovery';
+import { todayLocal } from '../utils/date';
 import { type SaveStatus, createSaveQueue } from '../infra/storage/saveQueue';
-import { type AppStart, appStorage, recover, reloadApp, subscribeAppStart } from './bootstrap';
+import { type AppStart, appStorage, metaStore, recover, reloadApp, subscribeAppStart } from './bootstrap';
 import { ContentContext, type LoadStatus, type RecoveryInfo } from './contentContext';
 
 // 재시도까지 모두 실패했는지를 Provider가 받아 화면에 알린다
@@ -73,6 +77,30 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     await reloadApp();
   }, []);
 
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  });
+
+  const replaceAll = useCallback(async (doc: ExportDoc) => {
+    const current = stateRef.current; // 저장 대기 변경까지 담긴 지금 상태를 보관한다
+    savedRef.current = null;
+    await saveQueue.discard();
+    try {
+      await importBackup({
+        storage: appStorage,
+        doc,
+        current,
+        schemaVersion: metaStore.get()?.schemaVersion ?? SCHEMA_VERSION,
+        today: todayLocal(),
+      });
+    } catch (error) {
+      await reloadApp(); // 저장소의 실제 상태로 맞춘다
+      throw error;
+    }
+    await reloadApp();
+  }, []);
+
   const recovery = useMemo<RecoveryInfo | null>(
     () =>
       corrupt && {
@@ -109,8 +137,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, state, dispatch, recovery, reload, saveFailed, retrySave, flushSave, clearAll }),
-    [status, state, dispatch, recovery, reload, saveFailed, clearAll],
+    () => ({ status, state, dispatch, recovery, reload, saveFailed, retrySave, flushSave, clearAll, replaceAll }),
+    [status, state, dispatch, recovery, reload, saveFailed, clearAll, replaceAll],
   );
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;
 }
