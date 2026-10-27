@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { validateCardText, validateName } from '../domain/validation';
 import {
+  RECOVERY,
   clockWarning,
+  corruptItemLabel,
   deleteDeckDetail,
   deleteSubjectDetail,
   dueTodayLabel,
@@ -46,5 +48,18 @@ describe('홈·상한 문구', () => {
 describe('통계 문구', () => {
   it('단계 라벨', () => {
     expect([0, 1, 3, 6].map(stageLabel)).toEqual(['새 카드·다시 학습', '1일 간격', '7일 간격', '60일 간격']);
+  });
+});
+
+describe('복구 문구', () => {
+  it('손상 항목 이름과 백업 날짜', () => {
+    expect(['bq:meta', 'bq:subjects', 'bq:decks', 'bq:cards:d1', 'bq:logs:2026-09'].map(corruptItemLabel)).toEqual([
+      '앱 설정 정보',
+      '과목 목록',
+      '덱 목록',
+      '덱 하나의 카드 목록',
+      '9월 학습 기록',
+    ]);
+    expect(RECOVERY.backupTitle('2026-10-25')).toBe('10월 25일 백업');
   });
 });

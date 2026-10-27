@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useContent } from "./app/contentContext";
 import { useRoute } from "./app/routeContext";
-import { routeTargetExists } from "./app/router";
+import { type Route, routeTargetExists } from "./app/router";
+import { SaveErrorNotice } from "./components/SaveErrorNotice";
 import { CardEditor } from "./screens/CardEditor/CardEditor";
 import { DeckDetail } from "./screens/DeckDetail/DeckDetail";
 import { Home } from "./screens/Home/Home";
+import { LoadFailed, Recovery } from "./screens/Recovery/Recovery";
 import { Stats } from "./screens/Stats/Stats";
 import { StudySession } from "./screens/Study/StudySession";
 import { SubjectList } from "./screens/SubjectList/SubjectList";
@@ -26,17 +28,20 @@ function App() {
   }, [status, route, replace]);
 
   if (status === "loading") return <p className={s.notice}>불러오는 중이에요</p>;
-  if (status === "error") {
-    // 손상 데이터를 덮어쓰지 않도록 편집 화면을 열지 않는다(복구는 Day 5)
-    return (
-      <p className={s.notice} role="alert">
-        저장된 데이터를 불러오지 못했어요.
-        <br />
-        앱을 다시 열어도 같으면 문의해 주세요.
-      </p>
-    );
-  }
+  // 손상 데이터를 덮어쓰지 않도록 편집 화면 대신 복구·다시 시도 화면을 연다
+  if (status === "corrupt") return <Recovery />;
+  if (status === "readFailed") return <LoadFailed />;
 
+  return (
+    <>
+      <SaveErrorNotice />
+      <Screen route={route} />
+    </>
+  );
+}
+
+// 경로에 맞는 화면
+function Screen({ route }: { route: Route }) {
   switch (route.name) {
     case "home":
       return <Home />;

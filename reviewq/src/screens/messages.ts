@@ -107,3 +107,39 @@ export const STATS = {
 export function stageLabel(stage: number): string {
   return stage === 0 ? '새 카드·다시 학습' : `${INTERVALS[stage - 1]}일 간격`;
 }
+
+export const RECOVERY = {
+  title: '저장된 데이터 일부를 읽을 수 없어요',
+  body: (n: number) => `읽을 수 없는 항목 ${n}개는 원본을 따로 보관한 뒤 아래 방법으로 다시 열 수 있어요.`,
+  backupTitle: (date: string) => `${formatMonthDay(date)} 백업`,
+  backupBody: (subjects: number, decks: number, cards: number) => `과목 ${subjects}개 · 덱 ${decks}개 · 카드 ${cards}장`,
+  restore: '백업으로 복구',
+  drop: '손상 항목 빼고 열기',
+  retry: '다시 시도',
+  dropTitle: '손상 항목을 빼고 열까요?',
+  dropDetail: (items: string[]) => `${items.join(', ')} 항목을 비운 채 열어요. 원본은 따로 보관돼요.`,
+  dropConfirm: '빼고 열기',
+  failed: '복구하지 못했어요. 저장된 데이터는 그대로예요. 잠시 후 다시 시도해 주세요.',
+  readFailedTitle: '데이터를 불러오지 못했어요',
+  readFailedBody: '저장된 데이터는 그대로예요. 잠시 후 다시 시도해 주세요.',
+};
+
+// 손상된 저장 키를 사용자에게 보일 이름으로 바꾼다
+export function corruptItemLabel(key: string): string {
+  if (key === 'bq:meta') return '앱 설정 정보';
+  if (key === 'bq:subjects') return '과목 목록';
+  if (key === 'bq:decks') return '덱 목록';
+  if (key.startsWith('bq:cards:')) return '덱 하나의 카드 목록';
+  if (key.startsWith('bq:logs:')) return `${Number(key.slice(-2))}월 학습 기록`;
+  return '저장 항목';
+}
+
+function formatMonthDay(date: string): string {
+  const [, m, d] = date.split('-').map(Number);
+  return `${m}월 ${d}일`;
+}
+
+export const SAVE_ERROR = {
+  body: '변경 내용을 저장하지 못했어요. 앱을 닫기 전에 다시 시도해 주세요.',
+  retry: '다시 시도',
+};

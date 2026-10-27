@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type ContentAction, type ContentState, contentReducer } from '../../domain/content';
 import { diffContent } from './diffContent';
 import { cardsKey, logsKey } from './keys';
+import type { StorageAdapter } from './StorageAdapter';
 import { loadContent } from './loadContent';
 import { createMemoryStorage } from './memoryStorage';
 import { createSaveQueue } from './saveQueue';
@@ -9,12 +10,19 @@ import { createSaveQueue } from './saveQueue';
 const T = '2026-10-26T00:00:00.000Z';
 const today = '2026-10-26';
 
+// 손상 없이 로드된 콘텐츠
+async function loadOk(storage: StorageAdapter): Promise<ContentState> {
+  const result = await loadContent(storage, today);
+  if (!result.ok) throw new Error('로드 손상');
+  return result.content;
+}
+
 // Provider와 같은 흐름: 로드 → 리듀서 → 변경 키 → 저장 큐 → 재로드
 describe('저장 왕복', () => {
   it('편집과 연쇄 삭제 결과가 재로드 후 그대로이고 삭제된 덱의 카드 키는 null이다', async () => {
     const storage = createMemoryStorage();
     const queue = createSaveQueue({ storage, delayMs: 0 });
-    let state: ContentState = await loadContent(storage, today);
+    let state: ContentState = await loadOk(storage);
 
     const dispatch = (action: ContentAction) => {
       const next = contentReducer(state, action);
@@ -31,12 +39,12 @@ describe('저장 왕복', () => {
     dispatch({ type: 'card/add', id: 'c2', deckId: 'd2', question: 'be', answer: '이다', now: T, today });
     dispatch({ type: 'card/add', id: 'c3', deckId: 'd3', question: '1+1', answer: '2', now: T, today });
     await queue.flush();
-    expect(await loadContent(storage, today)).toEqual(state);
+    expect(await loadOk(storage)).toEqual(state);
 
     dispatch({ type: 'subject/delete', id: 's1' });
     await queue.flush();
 
-    const reloaded = await loadContent(storage, today);
+    const reloaded = await loadOk(storage);
     expect(reloaded).toEqual(state);
     expect(reloaded.decks.map((d) => d.id)).toEqual(['d3']);
     expect(await storage.getItems([cardsKey('d1'), cardsKey('d2')])).toEqual({
@@ -55,7 +63,7 @@ describe('판정 즉시 저장 (D-01)', () => {
     vi.useFakeTimers();
     const storage = createMemoryStorage();
     const queue = createSaveQueue({ storage });
-    let state: ContentState = await loadContent(storage, today);
+    let state: ContentState = await loadOk(storage);
 
     // Provider와 같은 규칙: 판정 뒤에는 변경 키를 넣고 바로 flush한다
     const dispatch = async (action: ContentAction) => {
@@ -78,7 +86,7 @@ describe('판정 즉시 저장 (D-01)', () => {
     expect(JSON.parse(raw[cardsKey('d1')]!)[0].schedule).toMatchObject({ stage: 1, dueDate: '2026-10-27' });
     expect(JSON.parse(raw[logsKey(today)]!)).toHaveLength(2);
 
-    const reloaded = await loadContent(storage, today);
+    const reloaded = await loadOk(storage);
     expect(reloaded).toEqual(state);
     expect(reloaded.logs['2026-10'].map((l) => l.id)).toEqual(['l1', 'l2']);
   });
