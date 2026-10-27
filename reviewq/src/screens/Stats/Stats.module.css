@@ -1,0 +1,78 @@
+/* 숫자 요약 2칸(학습 완료 화면 요약과 같은 카드 모양) */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-3);
+  border-radius: 16px;
+  background: var(--color-bg-canvas);
+  text-align: center;
+}
+
+.stat dt {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-subtle);
+}
+
+.stat dd {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-title);
+  color: var(--color-text-strong);
+}
+
+.sectionTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-subtitle);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--color-text-strong);
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 라벨 | 막대 | 수 */
+.bar {
+  display: grid;
+  grid-template-columns: 8.5em 1fr 3.5em;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-body-small);
+}
+
+.barLabel {
+  color: var(--color-text-default);
+}
+
+.track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-bg-canvas);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--brand-primary);
+}
+
+.barCount {
+  font-weight: 600;
+  color: var(--color-text-strong);
+  text-align: right;
+}

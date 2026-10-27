@@ -5,6 +5,7 @@ import { routeTargetExists } from "./app/router";
 import { CardEditor } from "./screens/CardEditor/CardEditor";
 import { DeckDetail } from "./screens/DeckDetail/DeckDetail";
 import { Home } from "./screens/Home/Home";
+import { Stats } from "./screens/Stats/Stats";
 import { StudySession } from "./screens/Study/StudySession";
 import { SubjectList } from "./screens/SubjectList/SubjectList";
 import s from "./screens/screen.module.css";
@@ -51,6 +52,8 @@ function App() {
       return <StudySession key={route.deckId} deckId={route.deckId} />;
     case "studyAll":
       return <StudySession key="all" />;
+    case "stats":
+      return <Stats />;
   }
 }
 
