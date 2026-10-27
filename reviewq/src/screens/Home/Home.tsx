@@ -1,15 +1,14 @@
-import { useRef } from 'react';
-import { actions } from '../../app/actions';
+import { type ReactNode, useRef } from 'react';
 import { useContent } from '../../app/contentContext';
+import type { Route } from '../../app/router';
 import { useRoute } from '../../app/routeContext';
+import { sampleDeckActions } from '../../app/sampleDeck';
 import { useToday } from '../../app/todayContext';
-import { ChevronRight } from '../../components/icons';
+import { BookIcon, ChartIcon, ChevronRight, GearIcon } from '../../components/icons';
 import ui from '../../components/ui.module.css';
-import type { ContentAction } from '../../domain/content';
 import { buildQueue } from '../../domain/queue';
-import { SAMPLE_CARDS, SAMPLE_DECK, SAMPLE_SUBJECT } from '../../domain/sampleDeck';
 import { dueCountBySubject, overdueCount } from '../../domain/selectors';
-import { HOME, SETTINGS, STATS, clockWarning, overflowNotice } from '../messages';
+import { HOME, SETTINGS, STATS, clockWarning, homeDate, overflowNotice } from '../messages';
 import s from '../screen.module.css';
 import styles from './Home.module.css';
 
@@ -30,16 +29,22 @@ export function Home() {
   const addSample = () => {
     if (sampleRef.current) return;
     sampleRef.current = true;
-    const subject = actions.addSubject(SAMPLE_SUBJECT) as Extract<ContentAction, { type: 'subject/add' }>;
-    const deck = actions.addDeck(subject.id, SAMPLE_DECK) as Extract<ContentAction, { type: 'deck/add' }>;
-    dispatch(subject);
-    dispatch(deck);
-    for (const [question, answer] of SAMPLE_CARDS) dispatch(actions.addCard(deck.id, question, answer));
+    for (const action of sampleDeckActions()) dispatch(action);
   };
+  // 첫 사용이면 과목 만들기, 오늘 복습이 있으면 학습 시작만 하단에 둔다(과목 관리는 바로가기 타일)
+  const bottom =
+    totalCards === 0
+      ? { label: HOME.create, onClick: goSubjects }
+      : dueCount > 0
+        ? { label: HOME.start, onClick: () => navigate({ name: 'studyAll' }) }
+        : null;
 
   return (
     <main className={s.screen}>
       <header className={s.header}>
+        <p className={styles.brand}>
+          {HOME.brand} · {homeDate(today)}
+        </p>
         <h1 className={s.title}>{HOME.title}</h1>
       </header>
 
@@ -72,6 +77,12 @@ export function Home() {
         </p>
       )}
 
+      <nav className={styles.tiles} aria-label={HOME.tilesLabel}>
+        <Tile icon={<ChartIcon size={26} />} label={STATS.entry} route={{ name: 'stats' }} />
+        <Tile icon={<BookIcon size={26} />} label={HOME.manage} route={{ name: 'subjects' }} />
+        <Tile icon={<GearIcon size={26} />} label={SETTINGS.entry} route={{ name: 'settings' }} />
+      </nav>
+
       {totalCards > 0 && state.subjects.length > 0 && (
         <section aria-labelledby="home-subjects">
           <h2 id="home-subjects" className={styles.sectionTitle}>
@@ -95,45 +106,27 @@ export function Home() {
         </section>
       )}
 
-      <button type="button" className={`${s.row} ${styles.statsRow}`} onClick={() => navigate({ name: 'stats' })}>
-        <span className={s.rowMain}>
-          <span className={s.rowTitle}>{STATS.entry}</span>
-        </span>
-        <span className={s.rowChevron}>
-          <ChevronRight />
-        </span>
-      </button>
-
-      <button type="button" className={`${s.row} ${styles.settingsRow}`} onClick={() => navigate({ name: 'settings' })}>
-        <span className={s.rowMain}>
-          <span className={s.rowTitle}>{SETTINGS.entry}</span>
-        </span>
-        <span className={s.rowChevron}>
-          <ChevronRight />
-        </span>
-      </button>
-
-      <div className={ui.bottomSpacer} />
-      <div className={ui.bottomBar}>
-        {totalCards === 0 ? (
-          <button type="button" className={ui.primary} onClick={goSubjects}>
-            {HOME.create}
-          </button>
-        ) : dueCount > 0 ? (
-          <div className={styles.actions}>
-            <button type="button" className={ui.secondary} onClick={goSubjects}>
-              {HOME.manage}
-            </button>
-            <button type="button" className={ui.primary} onClick={() => navigate({ name: 'studyAll' })}>
-              {HOME.start}
+      {bottom && (
+        <>
+          <div className={ui.bottomSpacer} />
+          <div className={ui.bottomBar}>
+            <button type="button" className={ui.primary} onClick={bottom.onClick}>
+              {bottom.label}
             </button>
           </div>
-        ) : (
-          <button type="button" className={ui.primary} onClick={goSubjects}>
-            {HOME.manage}
-          </button>
-        )}
-      </div>
+        </>
+      )}
     </main>
+  );
+}
+
+// 바로가기 타일(아이콘 + 이름). 누르면 해당 화면으로 이동하고 뒤로가기로 홈에 돌아온다
+function Tile({ icon, label, route }: { icon: ReactNode; label: string; route: Route }) {
+  const { navigate } = useRoute();
+  return (
+    <button type="button" className={styles.tile} onClick={() => navigate(route)}>
+      <span className={styles.tileIcon}>{icon}</span>
+      <span className={styles.tileLabel}>{label}</span>
+    </button>
   );
 }

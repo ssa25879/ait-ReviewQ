@@ -26,6 +26,8 @@
 
   /* 브랜드 강조색 — 중립 기본값이다. 브랜드 색으로 바꾸세요. */
   --brand-primary: #191f28;
+  --brand-accent: #0f8b7a; /* 앱 브랜드색(로고·설정 파일 primaryColor와 같음) — 아이콘·장식 */
+  --brand-accent-text: #0a6e61; /* 흰 배경 위 작은 글자용(대비 4.5:1 이상) */
 
   /* 타이포 스케일 — 크기는 이 6단계 안에서만 고른다. weight는 400~700만 쓴다. */
   --font-size-display: 28px; /* Display·히어로 (26~32px 범위 안에서 조정 가능) */

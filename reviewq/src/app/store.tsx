@@ -2,6 +2,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, us
 import { type ContentAction, type ContentState, contentReducer, emptyContent } from '../domain/content';
 import { diffContent } from '../infra/storage/diffContent';
 import type { ExportDoc } from '../infra/storage/exportData';
+import { saveGuideSeen } from '../infra/storage/guide';
 import { importBackup } from '../infra/storage/importData';
 import { SCHEMA_VERSION } from '../infra/storage/meta';
 import { canRestoreFromBackup } from '../infra/storage/recovery';
@@ -21,6 +22,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<LoadStatus>('loading');
   const [saveFailed, setSaveFailed] = useState(false);
   const [corrupt, setCorrupt] = useState<Extract<AppStart, { kind: 'corrupt' }> | null>(null);
+  const [guideSeen, setGuideSeen] = useState(false);
   // 마지막으로 저장 큐에 반영한 상태. 로드 전·로드 실패 시 null이라 저장하지 않는다
   const savedRef = useRef<ContentState | null>(null);
   // 판정이 디스패치되면 다음 저장 반영 때 지연 없이 바로 저장한다(D-01)
@@ -42,6 +44,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           return;
         }
         const { meta, content } = start;
+        setGuideSeen(start.guideSeen);
         savedRef.current = content;
         rawDispatch({ type: 'content/replace', state: content });
         setCorrupt(null);
@@ -101,6 +104,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     await reloadApp();
   }, []);
 
+  const markGuideSeen = useCallback(() => {
+    setGuideSeen(true);
+    saveGuideSeen(appStorage).catch((error: unknown) => console.error('[reviewq] 가이드 본 기록 저장 실패', error));
+  }, []);
+
   const recovery = useMemo<RecoveryInfo | null>(
     () =>
       corrupt && {
@@ -137,8 +145,21 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, state, dispatch, recovery, reload, saveFailed, retrySave, flushSave, clearAll, replaceAll }),
-    [status, state, dispatch, recovery, reload, saveFailed, clearAll, replaceAll],
+    () => ({
+      status,
+      state,
+      dispatch,
+      recovery,
+      reload,
+      saveFailed,
+      retrySave,
+      flushSave,
+      clearAll,
+      replaceAll,
+      guideSeen,
+      markGuideSeen,
+    }),
+    [status, state, dispatch, recovery, reload, saveFailed, clearAll, replaceAll, guideSeen, markGuideSeen],
   );
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;
 }

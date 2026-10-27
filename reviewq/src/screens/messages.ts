@@ -6,7 +6,7 @@ export type Field = 'subjectName' | 'deckName' | 'question' | 'answer';
 
 const FIELD_OBJECT: Record<Field, string> = {
   subjectName: '과목 이름을',
-  deckName: '덱 이름을',
+  deckName: '단원 이름을',
   question: '질문을',
   answer: '정답을',
 };
@@ -26,15 +26,15 @@ export function validationMessage(field: Field, result: ValidationResult): strin
     : `${FIELD_MAX[field]}자 이하로 입력해 주세요`;
 }
 
-export const DUPLICATE_DECK_WARNING = '이 과목에 같은 이름의 덱이 있어요';
+export const DUPLICATE_DECK_WARNING = '이 과목에 같은 이름의 단원이 있어요';
 
 export function deleteSubjectDetail({ decks, cards }: { decks: number; cards: number }): string {
-  if (decks === 0) return '이 과목에는 덱이 없어요.';
-  return `덱 ${decks}개·카드 ${cards}장도 함께 삭제돼요.`;
+  if (decks === 0) return '이 과목에는 단원이 없어요.';
+  return `단원 ${decks}개·카드 ${cards}장도 함께 삭제돼요.`;
 }
 
 export function deleteDeckDetail(cards: number): string {
-  return cards === 0 ? '이 덱에는 카드가 없어요.' : `카드 ${cards}장도 함께 삭제돼요.`;
+  return cards === 0 ? '이 단원에는 카드가 없어요.' : `카드 ${cards}장도 함께 삭제돼요.`;
 }
 
 export function dueTodayLabel(count: number): string {
@@ -46,12 +46,12 @@ export const STUDY = {
   flipHint: '눌러서 정답 보기',
   forget: '기억 못 함',
   remember: '기억함',
-  backToDeck: '덱으로 돌아가기',
+  backToDeck: '단원으로 돌아가기',
   backHome: '홈으로',
   allTitle: '오늘 복습',
   allEmptyBody: '다음 복습일이 되면 홈에서 다시 학습할 수 있어요.',
   emptyTitle: '오늘 복습할 카드가 없어요',
-  emptyBody: '다음 복습일이 되면 이 덱에서 다시 학습할 수 있어요.',
+  emptyBody: '다음 복습일이 되면 이 단원에서 다시 학습할 수 있어요.',
   doneTitle: '오늘 학습을 마쳤어요',
   quitTitle: '학습을 그만할까요?',
   quitDetail: '지금까지 판정한 카드는 저장됐어요.',
@@ -79,19 +79,29 @@ export function clockWarning(lastOpenedDate: string): string {
   return `기기 날짜가 마지막으로 앱을 연 날(${m}월 ${d}일)보다 이전이에요. 날짜 설정을 확인해 주세요.`;
 }
 
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+// 홈 머리말 날짜: 'YYYY-MM-DD' → '10월 27일 (화)'
+export function homeDate(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return `${m}월 ${d}일 (${WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]})`;
+}
+
 export const HOME = {
+  brand: '복습큐',
+  tilesLabel: '바로가기',
   title: '오늘 복습',
   overdue: (n: number) => `연체 ${n}장`,
   noneTitle: '오늘 복습할 카드가 없어요',
   noneBody: '다음 복습일이 되면 여기에 다시 나와요.',
   firstTitle: '복습큐를 시작해 볼까요?',
-  firstBody: '과목과 덱을 만들고 카드를 추가하면 복습할 날에 맞춰 여기에 모아 보여 줘요.',
+  firstBody: '과목과 단원을 만들고 카드를 추가하면 복습할 날에 맞춰 여기에 모아 보여 줘요.',
   subjectsTitle: '과목별',
   start: '학습 시작',
-  manage: '과목·덱 관리',
-  create: '과목·덱 만들기',
+  manage: '과목 관리',
+  create: '과목·단원 만들기',
   sample: '예시 카드로 둘러보기',
-  sampleHint: '예시 과목은 과목·덱 관리에서 지울 수 있어요.',
+  sampleHint: '예시 과목은 과목 관리에서 지울 수 있어요.',
 };
 
 export const STATS = {
@@ -114,7 +124,7 @@ export const RECOVERY = {
   title: '저장된 데이터 일부를 읽을 수 없어요',
   body: (n: number) => `읽을 수 없는 항목 ${n}개는 원본을 따로 보관한 뒤 아래 방법으로 다시 열 수 있어요.`,
   backupTitle: (date: string) => `${formatMonthDay(date)} 백업`,
-  backupBody: (subjects: number, decks: number, cards: number) => `과목 ${subjects}개 · 덱 ${decks}개 · 카드 ${cards}장`,
+  backupBody: (subjects: number, decks: number, cards: number) => `과목 ${subjects}개 · 단원 ${decks}개 · 카드 ${cards}장`,
   restore: '백업으로 복구',
   drop: '손상 항목 빼고 열기',
   retry: '다시 시도',
@@ -130,8 +140,8 @@ export const RECOVERY = {
 export function corruptItemLabel(key: string): string {
   if (key === 'bq:meta') return '앱 설정 정보';
   if (key === 'bq:subjects') return '과목 목록';
-  if (key === 'bq:decks') return '덱 목록';
-  if (key.startsWith('bq:cards:')) return '덱 하나의 카드 목록';
+  if (key === 'bq:decks') return '단원 목록';
+  if (key.startsWith('bq:cards:')) return '단원 하나의 카드 목록';
   if (key.startsWith('bq:logs:')) return `${Number(key.slice(-2))}월 학습 기록`;
   return '저장 항목';
 }
@@ -181,16 +191,47 @@ export const BULK = {
   lineLabel: (line: number) => `${line}번째 줄`,
 };
 
+export const GUIDE = {
+  pages: [
+    {
+      title: '외울 내용을 카드로 만들어요',
+      body: '과목과 단원을 만들고, 카드 앞면에 질문을 뒷면에 정답을 적어요. 여러 장을 한 번에 붙여넣을 수도 있어요.',
+    },
+    {
+      title: '복습할 날이 되면 홈에 모여요',
+      body: '홈에서 오늘 복습할 카드 수를 확인하고 학습 시작을 누르면, 카드를 한 장씩 넘기며 복습해요.',
+    },
+    {
+      title: '기억할수록 간격이 늘어나요',
+      body: '기억함을 누를 때마다 다음 복습이 점점 뒤로 미뤄지고, 기억 못 함을 누르면 처음부터 다시 해요.',
+    },
+  ],
+  progress: (page: number, total: number) => `${page} / ${total}`,
+  skip: '건너뛰기',
+  next: '다음',
+  create: '직접 만들기',
+  sample: '예시 카드로 시작',
+  done: '확인',
+  exampleQuestion: '질문',
+  exampleAnswer: '정답',
+  exampleToday: '오늘 복습',
+  exampleSubjects: '영어 8장 · 한국사 4장',
+  intervalsCaption: '기억함을 누를 때마다',
+  resetCaption: '기억 못 함 → 처음(1일)부터 다시',
+};
+
 export const SETTINGS = {
   entry: '설정',
   title: '설정',
   storageTitle: '데이터는 이 기기에만 저장돼요',
   storageBody: '토스 앱을 지우거나 기기를 바꾸면 학습 데이터가 사라져요. 가끔 백업을 내보내 보관해 두세요.',
   backupTitle: '백업',
+  guideTitle: '사용 방법',
+  guideOpen: '사용 방법 보기',
   dataTitle: '데이터',
   clear: '모든 데이터 삭제',
   clearConfirmTitle: '모든 데이터를 지울까요?',
-  clearConfirmBody: '과목·덱·카드와 학습 기록, 알림 설정 기록이 모두 지워지고 되돌릴 수 없어요. 먼저 백업을 내보내 두세요.',
+  clearConfirmBody: '과목·단원·카드와 학습 기록, 알림 설정 기록이 모두 지워지고 되돌릴 수 없어요. 먼저 백업을 내보내 두세요.',
   clearContinue: '계속',
   clearFinalTitle: '정말 지울까요?',
   clearFinalBody: '지운 데이터는 다시 볼 수 없어요.',
@@ -201,10 +242,19 @@ export const SETTINGS = {
 };
 
 export const EXPORT = {
-  description: '과목·덱·카드와 학습 기록을 JSON 파일 하나로 저장해요.',
-  action: '백업 내보내기',
-  working: '내보내는 중이에요',
-  saved: (fileName: string) => `백업 파일(${fileName})을 저장했어요.`,
+  description: '백업 코드를 카카오톡 나와의 채팅 같은 곳에 보내 두면, 기기를 바꿔도 붙여넣어서 되살릴 수 있어요.',
+  share: '백업 코드 공유',
+  shareMessage: (code: string) =>
+    `복습큐 백업 코드예요. 복습큐 설정 > 백업 가져오기에 이 메시지를 통째로 붙여넣으면 돼요.\n\n${code}`,
+  shareHint: '공유 창이 닫혀도 아래 코드를 복사해 보관할 수 있어요.',
+  shareFailed: '공유 창을 열지 못했어요. 아래 코드를 복사해 보관해 주세요.',
+  codeLabel: '백업 코드',
+  copy: '코드 복사',
+  copied: '코드를 복사했어요.',
+  copyFailed: '복사하지 못했어요. 코드를 길게 눌러 복사해 주세요.',
+  action: '파일로 저장',
+  working: '만드는 중이에요',
+  saved: (fileName: string) => `백업 파일(${fileName}) 저장을 요청했어요.`,
   saveFailed: '파일로 저장하지 못했어요. 아래 내용을 복사해 보관해 주세요.',
   unsupported: '이 기기에서는 파일로 저장할 수 없어요. 아래 내용을 복사해 보관해 주세요.',
   copyHint: '길게 눌러 전체 선택한 뒤 복사해 주세요.',
@@ -214,26 +264,23 @@ export const EXPORT = {
 
 export const IMPORT = {
   action: '백업 가져오기',
-  description: '내보낸 백업 파일을 고르거나, 파일을 고를 수 없으면 백업 내용을 붙여넣어 주세요.',
-  pickFile: '파일 선택',
-  pasteLabel: '또는 백업 내용 붙여넣기',
+  description: '공유해 둔 백업 코드 메시지를 길게 눌러 복사한 뒤 아래에 붙여넣어 주세요. 저장해 둔 백업 파일을 골라도 돼요.',
+  pickFile: '백업 파일 선택',
+  pasteLabel: '백업 코드 붙여넣기',
   load: '불러오기',
   reading: '읽는 중이에요',
   notJson: '백업 파일이 아니에요. 내보내기로 저장한 파일인지 확인해 주세요.',
   invalid: '백업 파일 형식이 맞지 않아요. 내보내기로 저장한 파일인지 확인해 주세요.',
   inconsistent: '백업 내용이 서로 맞지 않아 가져올 수 없어요.',
   newer: '더 새로운 버전의 앱에서 만든 백업이에요. 앱을 업데이트한 뒤 가져와 주세요.',
+  badCode: '백업 코드가 올바르지 않아요. 코드 전체를 복사했는지 확인해 주세요.',
   readFailed: '파일을 읽지 못했어요. 백업 내용을 붙여넣어 주세요.',
   summary: (s: { subjects: number; decks: number; cards: number; logs: number }) =>
-    `과목 ${s.subjects}개, 덱 ${s.decks}개, 카드 ${s.cards}장, 학습 기록 ${s.logs}건`,
+    `과목 ${s.subjects}개, 단원 ${s.decks}개, 카드 ${s.cards}장, 학습 기록 ${s.logs}건`,
   exportedAt: (date: string) => `${date}에 내보낸 백업이에요.`,
-  replace: '이 백업으로 바꾸기',
-  confirmTitle: '지금 데이터를 바꿀까요?',
-  confirmBody: '지금의 과목·덱·카드와 학습 기록이 백업 내용으로 바뀌어요. 알림 설정은 그대로예요.',
-  confirmContinue: '계속',
-  finalTitle: '정말 바꿀까요?',
-  finalBody: '바꾸기 전 데이터는 이 기기에 따로 보관돼요.',
-  finalConfirm: '바꾸기',
+  confirmTitle: '이 백업으로 바꿀까요?',
+  confirmBody: '지금의 과목·단원·카드와 학습 기록이 백업 내용으로 바뀌어요. 바꾸기 전 데이터는 이 기기에 따로 보관돼요.',
+  confirmLabel: '바꾸기',
   replacing: '바꾸는 중이에요',
   failed: '백업을 가져오지 못했어요. 다시 시도해 주세요.',
 };

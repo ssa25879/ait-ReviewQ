@@ -176,30 +176,30 @@ const today = () => t(`return (await __mods()).date.todayLocal()`);
 try {
   // ── 예시 덱
   await load(APP); await hook();
-  await evaluate(`localStorage.clear()`); await fresh(APP);
-  check('첫 사용 홈에 예시 카드로 둘러보기', await hasButton('예시 카드로 둘러보기') && (await text()).includes('과목·덱 관리에서 지울 수 있어요'));
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(APP);
+  check('첫 사용 홈에 예시 카드로 둘러보기', await hasButton('예시 카드로 둘러보기') && (await text()).includes('과목 관리에서 지울 수 있어요'));
   await audit('홈 첫 사용(예시 버튼)');
   await t(`__t.click('예시 카드로 둘러보기'); __t.buttons('예시 카드로 둘러보기')[0]?.click();`);
   await sleep(1200);
   const subjects = JSON.parse(await ls('bq:subjects'));
   const decks = JSON.parse(await ls('bq:decks'));
-  check('예시 과목 1개·덱 1개(연타해도 한 번)', subjects.length === 1 && subjects[0].name === '예시' && decks.length === 1 && decks[0].name === '영단어 기초', JSON.stringify(subjects.map((s) => s.name)));
+  check('예시 과목 1개·단원 1개(연타해도 한 번)', subjects.length === 1 && subjects[0].name === '예시' && decks.length === 1 && decks[0].name === '영단어 기초', JSON.stringify(subjects.map((s) => s.name)));
   const deckId = decks[0].id;
-  check('예시 덱 카드 10장', JSON.parse(await ls(`bq:cards:${deckId}`)).length === 10);
+  check('예시 단원 카드 10장', JSON.parse(await ls(`bq:cards:${deckId}`)).length === 10);
   check('홈 오늘 복습 10장·학습 시작·예시 버튼 사라짐', (await text()).includes('10장') && (await hasButton('학습 시작')) && !(await hasButton('예시 카드로 둘러보기')));
 
   // ── 여러 장 추가: 진입·뒤로가기·직접 열기
   await fresh(APP + `#/deck/${deckId}`);
-  check('덱 상세에 여러 장 한 번에 추가', await t(`return [...document.querySelectorAll('button')].some((b) => b.textContent.includes('여러 장 한 번에 추가'))`));
+  check('단원 상세에 여러 장 한 번에 추가', await t(`return [...document.querySelectorAll('button')].some((b) => b.textContent.includes('여러 장 한 번에 추가'))`));
   await t(`__t.clickRow('여러 장 한 번에 추가')`); await sleep(400);
-  check('덱 상세 → 여러 장 추가 화면', (await hash()) === `#/deck/${deckId}/cards/bulk` && (await h1()) === '여러 장 한 번에 추가');
+  check('단원 상세 → 여러 장 추가 화면', (await hash()) === `#/deck/${deckId}/cards/bulk` && (await h1()) === '여러 장 한 번에 추가');
   await evaluate(`history.back()`); await sleep(400);
-  check('뒤로가기 → 덱 상세', (await hash()) === `#/deck/${deckId}` && (await h1()) === '영단어 기초');
+  check('뒤로가기 → 단원 상세', (await hash()) === `#/deck/${deckId}` && (await h1()) === '영단어 기초');
   await fresh(APP + `#/deck/${deckId}/cards/bulk`);
   check('주소로 바로 열기', (await h1()) === '여러 장 한 번에 추가');
   check('입력 전 추가 버튼 비활성', await addDisabled());
   await evaluate(`history.back()`); await sleep(400);
-  check('직접 연 화면에서 뒤로가기 → 덱 상세', (await hash()) === `#/deck/${deckId}`);
+  check('직접 연 화면에서 뒤로가기 → 단원 상세', (await hash()) === `#/deck/${deckId}`);
 
   // ── 모두 올바름 → 덱 상세 복귀(연타 1회)
   await fresh(APP + `#/deck/${deckId}/cards/bulk`);
@@ -209,7 +209,7 @@ try {
   await t(`const b = document.querySelector('[class*="bottomBar"] button'); b.click(); b.click();`);
   await sleep(1000);
   const cards13 = JSON.parse(await ls(`bq:cards:${deckId}`));
-  check('추가 → 덱 상세 복귀', (await hash()) === `#/deck/${deckId}`);
+  check('추가 → 단원 상세 복귀', (await hash()) === `#/deck/${deckId}`);
   check('연타해도 3장만 추가(10 → 13)', cards13.length === 13, String(cards13.length));
   const added = cards13.slice(-3);
   const td = await today();
@@ -234,7 +234,7 @@ try {
   check('기본 빌드: 데모 데이터 채우기 없음', !(await hasButton('데모 데이터 채우기')) && !(await text()).includes('테스트용'));
 
   // ── 데모 플래그 빌드
-  await fresh(DEMO_APP); await evaluate(`localStorage.clear()`); await fresh(DEMO_APP);
+  await fresh(DEMO_APP); await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(DEMO_APP);
   await t(`
     const { actions } = await __mods(); const { dispatch } = __app();
     const s = actions.addSubject('내 과목'); dispatch(s);

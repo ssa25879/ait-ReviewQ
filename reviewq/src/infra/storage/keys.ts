@@ -6,6 +6,8 @@ export const DECKS_KEY = `${PREFIX}decks`;
 export const BACKUP_KEY = `${PREFIX}backup:last`;
 // 백업 가져오기·데모 데이터로 바꾸기 직전의 데이터(내보내기 형식)
 export const BEFORE_IMPORT_KEY = `${PREFIX}backup:beforeImport`;
+// 최초 실행 가이드를 봤는지
+export const GUIDE_KEY = `${PREFIX}guide`;
 
 export function cardsKey(deckId: string): string {
   return `${PREFIX}cards:${deckId}`;

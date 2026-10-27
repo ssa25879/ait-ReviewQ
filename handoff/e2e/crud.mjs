@@ -135,7 +135,7 @@ try {
   await send('Page.navigate', { url: 'about:blank' }); await sleep(200); await load(APP + '#/subjects'); // day4: 최초 화면은 홈, 목록은 #/subjects
 
   // 3.1 과목·덱 목록
-  check('#/subjects는 과목·덱 목록',(await t(`return __t.h1()`)) === '과목·덱');
+  check('#/subjects는 과목·단원 목록',(await t(`return __t.h1()`)) === '과목·단원');
   check('빈 상태 안내', (await t(`return __t.text()`)).includes('아직 과목이 없어요'));
   await audit('목록(빈 상태)');
 
@@ -149,23 +149,23 @@ try {
   await t(`__t.fillDialog('토익'); __t.click('만들기')`); await settle();
   check('과목 2개 생성', (await t(`return [...document.querySelectorAll('h2')].map((h) => h.textContent).join(',')`)) === '영어,토익');
 
-  await t(`__t.click('+ 덱 추가', 0)`); await settle();
+  await t(`__t.click('+ 단원 추가', 0)`); await settle();
   await t(`__t.fillDialog('${'가'.repeat(31)}')`); await settle();
-  check('31자 덱 이름 안내', (await t(`return __t.text()`)).includes('30자 이하로 입력해 주세요'));
+  check('31자 단원 이름 안내', (await t(`return __t.text()`)).includes('30자 이하로 입력해 주세요'));
   await t(`__t.click('만들기')`); await settle();
-  check('31자 덱 이름은 저장 안 됨', (await t(`return !!document.querySelector('[role=dialog]')`)));
+  check('31자 단원 이름은 저장 안 됨', (await t(`return !!document.querySelector('[role=dialog]')`)));
   await t(`__t.fillDialog('단어'); __t.click('만들기')`); await settle();
-  await t(`__t.click('+ 덱 추가', 0)`); await settle();
+  await t(`__t.click('+ 단원 추가', 0)`); await settle();
   await t(`__t.fillDialog(' 단어 ')`); await settle();
-  check('중복 덱 이름 경고', (await t(`return __t.text()`)).includes('이 과목에 같은 이름의 덱이 있어요'));
+  check('중복 단원 이름 경고', (await t(`return __t.text()`)).includes('이 과목에 같은 이름의 단원이 있어요'));
   await t(`__t.click('취소')`); await settle();
-  check('덱 카드 수 0장', (await t(`return __t.text()`)).includes('단어\n0장'));
+  check('단원 카드 수 0장', (await t(`return __t.text()`)).includes('단어\n0장'));
 
   // 3.2 덱 상세
   await t(`__t.clickRow('단어')`); await settle();
-  check('덱 상세 이동', (await t(`return __t.h1()`)) === '단어');
-  check('빈 덱 안내', (await t(`return __t.text()`)).includes('아직 카드가 없어요'));
-  await audit('덱 상세(빈 상태)');
+  check('단원 상세 이동', (await t(`return __t.h1()`)) === '단어');
+  check('빈 단원 안내', (await t(`return __t.text()`)).includes('아직 카드가 없어요'));
+  await audit('단원 상세(빈 상태)');
 
   // 3.3 카드 작성
   await t(`__t.click('카드 추가')`); await settle();
@@ -182,10 +182,10 @@ try {
   check('저장 후 계속: 화면 유지', (await t(`return __t.h1()`)) === '새 카드');
   await t(`__t.fillCard('banana', '바나나'); __t.click('저장 후 계속')`); await settle();
   await t(`__t.fillCard('삭제할 카드', '임시'); __t.click('저장')`); await sleep(400);
-  check('저장 후 덱 상세 복귀', (await t(`return __t.h1()`)) === '단어');
+  check('저장 후 단원 상세 복귀', (await t(`return __t.h1()`)) === '단어');
   check('카드 3장 목록', (await t(`return __t.text()`)).includes('카드 3장'));
   check('다음 복습 오늘 표시', (await t(`return __t.text()`)).includes('다음 복습 오늘'));
-  await audit('덱 상세(카드 목록)');
+  await audit('단원 상세(카드 목록)');
   await shot('3-deck-detail');
 
   // 카드 삭제
@@ -193,22 +193,22 @@ try {
   check('카드 편집 화면', (await t(`return __t.h1()`)) === '카드 편집');
   await t(`__t.click('삭제')`); await settle();
   await t(`__t.buttons('삭제').at(-1).click()`); await sleep(400);
-  check('카드 삭제 후 덱 상세 복귀·2장', (await t(`return __t.h1()`)) === '단어' && (await t(`return __t.text()`)).includes('카드 2장'));
+  check('카드 삭제 후 단원 상세 복귀·2장', (await t(`return __t.h1()`)) === '단어' && (await t(`return __t.text()`)).includes('카드 2장'));
 
   // 뒤로가기: 목록 → 덱 상세 → 카드 편집 → 뒤로 2회 → 목록
   await t(`__t.clickRow('apple')`); await settle();
   await t(`history.back()`); await sleep(300);
-  check('뒤로가기 1회 → 덱 상세', (await t(`return __t.h1()`)) === '단어');
+  check('뒤로가기 1회 → 단원 상세', (await t(`return __t.h1()`)) === '단어');
   await t(`history.back()`); await sleep(300);
-  check('뒤로가기 2회 → 목록', (await t(`return __t.h1()`)) === '과목·덱');
+  check('뒤로가기 2회 → 목록', (await t(`return __t.h1()`)) === '과목·단원');
   check('목록 카드 수 2장', (await t(`return __t.text()`)).includes('단어\n2장'));
 
   // 덱 이동
-  await t(`__t.clickLabel('단어 덱 더보기')`); await settle();
+  await t(`__t.clickLabel('단어 단원 더보기')`); await settle();
   await t(`__t.click('다른 과목으로 옮기기')`); await settle();
   await t(`__t.click('토익')`); await settle();
   const sections = await t(`return [...document.querySelectorAll('section[aria-label]')].map((x) => x.getAttribute('aria-label') + ':' + x.innerText.replace(/\\n/g, '|'))`);
-  check('덱 이동: 토익 아래 2장', sections.some((x) => x.startsWith('토익:') && x.includes('단어|2장')), sections.join(' / '));
+  check('단원 이동: 토익 아래 2장', sections.some((x) => x.startsWith('토익:') && x.includes('단어|2장')), sections.join(' / '));
   await shot('1-subject-list');
   await audit('목록(데이터 있음)');
 
@@ -216,25 +216,25 @@ try {
   await sleep(800);
   await reload();
   const afterReload = await t(`return __t.text()`);
-  check('새로고침 후 유지(과목·덱·카드 수)', afterReload.includes('영어') && afterReload.includes('토익') && afterReload.includes('단어\n2장'));
+  check('새로고침 후 유지(과목·단원·카드 수)', afterReload.includes('영어') && afterReload.includes('토익') && afterReload.includes('단어\n2장'));
 
   // 덱 상세에서 새로고침 → 같은 화면
   await t(`__t.clickRow('단어')`); await settle();
   await reload();
-  check('덱 상세에서 새로고침 → 같은 덱', (await t(`return __t.h1()`)) === '단어');
+  check('단원 상세에서 새로고침 → 같은 단원', (await t(`return __t.h1()`)) === '단어');
   await t(`history.back()`); await sleep(300);
-  check('새로고침 후 뒤로가기 → 목록', (await t(`return __t.h1()`)) === '과목·덱');
+  check('새로고침 후 뒤로가기 → 목록', (await t(`return __t.h1()`)) === '과목·단원');
 
   // 없는 덱 주소 → 홈(day4)
   await t(`location.hash = '#/deck/nope'`); await sleep(300);
-  check('없는 덱 주소 → 홈', (await t(`return __t.h1()`)) === '오늘 복습' && (await t(`return location.hash`)) === '#/');
+  check('없는 단원 주소 → 홈', (await t(`return __t.h1()`)) === '오늘 복습' && (await t(`return location.hash`)) === '#/');
   await t(`location.hash = '#/subjects'`); await sleep(300);
 
   // 과목 연쇄 삭제
   await t(`__t.clickLabel('토익 과목 더보기')`); await settle();
   await t(`__t.click('삭제')`); await settle();
   const confirmText = await t(`return document.querySelector('[role=dialog]').innerText`);
-  check('삭제 확인 문구(덱 1개·카드 2장)', confirmText.includes('덱 1개·카드 2장도 함께 삭제돼요.'));
+  check('삭제 확인 문구(단원 1개·카드 2장)', confirmText.includes('단원 1개·카드 2장도 함께 삭제돼요.'));
   await shot('5-delete-confirm');
   await t(`__t.buttons('삭제').at(-1).click()`); await settle();
   await sleep(800);
@@ -242,7 +242,7 @@ try {
   const afterDelete = await t(`return __t.text()`);
   check('연쇄 삭제 후 새로고침: 토익·단어 없음, 영어 유지', !afterDelete.includes('토익') && !afterDelete.includes('단어') && afterDelete.includes('영어'));
   const keys = await t(`return Object.keys(localStorage).filter((k) => k.includes('bq:cards'))`);
-  check('삭제된 덱의 카드 키 정리', keys.length === 0, JSON.stringify(keys));
+  check('삭제된 단원의 카드 키 정리', keys.length === 0, JSON.stringify(keys));
 
   // 하위 화면으로 바로 진입(새 탭) → 뒤로가기 시 상위 화면
   await send('Page.navigate', { url: 'about:blank' });
@@ -250,7 +250,7 @@ try {
   await t(`localStorage.length`).catch(() => {});
   // 덱 하나 만들어 id 확보 후 해당 주소로 새 진입
   await load(APP + '#/subjects');
-  await t(`__t.click('+ 덱 추가', 0)`); await settle();
+  await t(`__t.click('+ 단원 추가', 0)`); await settle();
   await t(`__t.fillDialog('숙어'); __t.click('만들기')`); await settle();
   await t(`__t.clickRow('숙어')`); await settle();
   const deckHash = await t(`return location.hash`);
@@ -261,9 +261,9 @@ try {
   await waitFor(`document.querySelector('h1')`); await evaluate(HELPERS);
   check('카드 작성 주소로 바로 진입', (await t(`return __t.h1()`)) === '새 카드');
   await t(`history.back()`); await sleep(300);
-  check('바로 진입 후 뒤로가기 → 덱 상세', (await t(`return __t.h1()`)) === '숙어');
+  check('바로 진입 후 뒤로가기 → 단원 상세', (await t(`return __t.h1()`)) === '숙어');
   await t(`history.back()`); await sleep(300);
-  check('한 번 더 뒤로가기 → 목록', (await t(`return __t.h1()`)) === '과목·덱');
+  check('한 번 더 뒤로가기 → 목록', (await t(`return __t.h1()`)) === '과목·단원');
   await t(`history.back()`); await sleep(300);
   check('목록에서 뒤로가기 → 홈(day4)', (await t(`return __t.h1()`)) === '오늘 복습');
 

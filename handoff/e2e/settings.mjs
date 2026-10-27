@@ -203,7 +203,7 @@ const today = () =>t(`return (await __mods()).date.todayLocal()`);
 try {
   // ── 진입·뒤로가기
   await load(APP); await hook();
-  await evaluate(`localStorage.clear()`); await fresh(APP);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(APP);
   check('홈에 설정 행', await hasButton('설정'));
   await click('설정');
   check('홈 → 설정', (await hash()) === '#/settings' && (await h1()) === '설정');
@@ -223,11 +223,11 @@ try {
   check('설정 화면에 광고 없음', (await t(`return document.querySelectorAll('[data-ad-slot]').length`)) === 0);
 
   // ── 내보내기: 빈 데이터
-  await click('백업 내보내기'); await sleep(300);
+  await click('파일로 저장'); await sleep(300);
   let d = await lastDoc();
   check('빈 데이터 내보내기: 파일 1회·유효한 문서', (await saved()) === 1 && d.valid && d.doc.subjects.length === 0 && Object.keys(d.doc.logs).length === 0);
   check('파일 이름·MIME', d.fileName === `reviewq-backup-${await today()}.json` && d.head === 'data:application/json;base64', `${d.fileName} ${d.head}`);
-  check('저장 완료 안내', (await text()).includes('저장했어요'));
+  check('저장 완료 안내', (await text()).includes('저장을 요청했어요'));
   await audit('설정(기본)'); await shot('settings-default');
 
   // ── 내보내기: 데이터·석 달 전 기록·알림 기록·저장 대기 중 편집
@@ -248,11 +248,11 @@ try {
     const card = state.cards[${JSON.stringify(deckId)}][0];
     dispatch({ type: 'card/update', id: card.id, deckId: card.deckId, question: card.question, answer: '고친정답', now: new Date().toISOString() });
     await __wait(30);
-    __t.click('백업 내보내기');`);
+    __t.click('파일로 저장');`);
   await sleep(600);
   d = await lastDoc();
   const cards = Object.values(d.doc.cards).flat();
-  check('데이터 내보내기: 과목·덱·카드 포함·형식 검증 통과', d.valid && d.doc.subjects.length === 1 && d.doc.decks.length === 1 && cards.length === 1);
+  check('데이터 내보내기: 과목·단원·카드 포함·형식 검증 통과', d.valid && d.doc.subjects.length === 1 && d.doc.decks.length === 1 && cards.length === 1);
   check('석 달 전 판정 기록 포함', d.doc.logs['2026-07']?.[0]?.id === 'l-old', JSON.stringify(Object.keys(d.doc.logs)));
   check('저장 대기 중 편집 값을 내보냄', cards[0]?.answer === '고친정답', cards[0]?.answer);
   check('알림 기록·기기 식별자 없음', !d.text.includes('notification') && !d.text.includes('installId') && !d.text.includes((await meta()).installId));
@@ -260,13 +260,13 @@ try {
 
   // 연타
   const before = await saved();
-  await t(`__t.click('백업 내보내기'); __t.click('백업 내보내기')`); await sleep(600);
+  await t(`__t.click('파일로 저장'); __t.click('파일로 저장')`); await sleep(600);
   check('연타 → 파일 저장 1회', (await saved()) === before + 1, `${before} → ${await saved()}`);
 
   // 저장 실패
   const snapFail = await snapshot();
   await evaluate(`window.__saveFail = true`);
-  await click('백업 내보내기'); await sleep(300);
+  await click('파일로 저장'); await sleep(300);
   const failText = await exportText();
   check('저장 실패 → 안내·텍스트 표시', (await text()).includes('파일로 저장하지 못했어요') && failText.includes('"reviewq-backup"') && failText.includes('고친정답'));
   check('저장 실패 → 저장소 값 불변', (await snapshot()) === snapFail);
@@ -279,7 +279,7 @@ try {
   await evaluate(`__ait.update({ environment: 'toss', appVersion: '5.200.0' })`);
   await remount('#/settings');
   const beforeUnsup = await saved();
-  await click('백업 내보내기'); await sleep(300);
+  await click('파일로 저장'); await sleep(300);
   check('미지원 → 파일 저장 0회·텍스트 표시', (await saved()) === beforeUnsup && (await text()).includes('파일로 저장할 수 없어요') && (await exportText()).includes('"reviewq-backup"'));
   await evaluate(`__ait.update({ environment: 'sandbox', appVersion: '5.240.0' })`);
 
@@ -324,10 +324,12 @@ try {
   check('전체 삭제 → 홈 첫 사용 상태', (await hash()) === '#/' && (await text()).includes('복습큐를 시작해 볼까요?'));
   check('편집 직후 삭제해도 카드가 다시 저장되지 않음', !(await t(`return Object.keys(localStorage).some((k) => k.includes('bq:cards:'))`)));
   await reload(); await hook();
-  check('삭제 후 재실행 → 빈 상태', (await text()).includes('복습큐를 시작해 볼까요?') && (await t(`return __app().state.subjects.length`)) === 0);
+  check('삭제 후 재실행 → 처음 실행 가이드', (await hash()) === '#/guide' && (await t(`return __app().state.subjects.length`)) === 0);
+  await t(`__t.click('건너뛰기')`); await sleep(400);
+  check('가이드 건너뛰면 빈 첫 사용 홈', (await hash()) === '#/' && (await text()).includes('복습큐를 시작해 볼까요?'));
 
   // ── 알림 플래그 on
-  await fresh(FLAGS_APP); await evaluate(`localStorage.clear()`); await fresh(FLAGS_APP + '#/settings');
+  await fresh(FLAGS_APP); await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(FLAGS_APP + '#/settings');
   check('플래그 on: 복습 알림 항목·아직 정하지 않음', (await text()).includes('복습 알림') && (await text()).includes('아직 정하지 않았어요') && (await hasButton('알림 받기')));
   check('플래그 on: 설정 진입만으로 요청 0회', (await sdkCalls('otification')) === 0);
   check('플래그 on: 설정 화면에 광고 없음', (await t(`return document.querySelectorAll('[data-ad-slot]').length`)) === 0);

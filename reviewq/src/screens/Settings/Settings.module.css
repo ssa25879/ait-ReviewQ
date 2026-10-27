@@ -87,11 +87,29 @@
   display: none;
 }
 
-.summary {
+
+/* 백업 코드 표시·복사 */
+.codeBox {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-4);
-  border-radius: 12px;
-  background: var(--color-bg-canvas);
+  gap: var(--space-2);
+}
+
+.codeText {
+  min-height: 120px;
+  font-family: ui-monospace, monospace;
+  font-size: var(--font-size-body-small);
+  word-break: break-all;
+}
+
+/* 가져오기 확인 팝업의 줄 구분 */
+.dialogStrong {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.dialogLine {
+  display: block;
+  margin-top: var(--space-1);
 }

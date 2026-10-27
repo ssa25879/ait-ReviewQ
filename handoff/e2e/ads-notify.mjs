@@ -207,34 +207,34 @@ async function auditApp(name) {
 try {
   // ── 기본 빌드(플래그 off)
   await load(APP); await hook();
-  await evaluate(`localStorage.clear()`); await fresh(APP);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(APP);
   const deckOff = await addDueCard(null, 'off-1');
   await fresh(APP + '#/subjects');
-  check('기본 빌드: 과목·덱 목록에 광고 없음', (await slots()).length === 0);
+  check('기본 빌드: 과목·단원 목록에 광고 없음', (await slots()).length === 0);
   await finishSession(APP, deckOff);
   check('기본 빌드: 학습 완료 화면 도달', (await h1()) === '오늘 학습을 마쳤어요');
   check('기본 빌드: 학습 완료에 광고·알림 버튼 없음 (N-08)', (await slots()).length === 0 && !(await hasButton('복습 알림 받기')));
   check('기본 빌드: TossAds·알림 동의 호출 0회', (await sdkCalls('TossAds')) === 0 && (await sdkCalls('otification')) === 0);
 
   // ── 플래그 on 빌드
-  await fresh(FLAGS_APP); await evaluate(`localStorage.clear()`); await fresh(FLAGS_APP);
+  await fresh(FLAGS_APP); await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(FLAGS_APP);
   check('플래그 on: 앱 진입 직후 동의 요청 0회·대화상자 없음 (N-07)', (await sdkCalls('otification')) === 0 && !(await t(`return !!document.querySelector('[role=dialog]')`)));
   check('플래그 on: 홈에 광고 없음', (await slots()).length === 0);
   await fresh(FLAGS_APP + '#/subjects'); await sleep(600);
-  check('빈 과목·덱 목록에는 광고 없음', (await text()).includes('아직 과목이 없어요') && (await slots()).length === 0 && (await adCalls('TossAds.attachBanner')) === 0);
+  check('빈 과목·단원 목록에는 광고 없음', (await text()).includes('아직 과목이 없어요') && (await slots()).length === 0 && (await adCalls('TossAds.attachBanner')) === 0);
   await fresh(FLAGS_APP);
   const deck = await addDueCard(null, 'on-1');
   await fresh(FLAGS_APP + '#/subjects'); await sleep(600);
-  check('과목·덱 목록 광고 1개', JSON.stringify(await slots()) === '["subjects"]', JSON.stringify(await slots()));
+  check('과목·단원 목록 광고 1개', JSON.stringify(await slots()) === '["subjects"]', JSON.stringify(await slots()));
   check('광고 그룹 ID = 테스트 ID', (await t(`return __ait.state.sdkCallLog.filter((e) => e.method === 'TossAds.attachBanner').map((e) => e.args[0])`)).every((id) => id === 'ait-ad-test-banner-id'));
   check('배너 렌더(모의 placeholder)', (await placeholders()) === 1);
   check('광고와 하단 고정 버튼 겹침 없음·24px 이상', (await gap(`document.querySelector('[data-ad-slot]')`, barTop)) >= 24);
   check('광고 위 요소와 24px 이상', (await gap(`document.querySelector('[data-ad-slot]').previousElementSibling`, `document.querySelector('[data-ad-slot]')`)) >= 24);
-  await auditApp('과목·덱 목록(광고)'); await shot('ads-subjects');
+  await auditApp('과목·단원 목록(광고)'); await shot('ads-subjects');
   const init1 = await adCalls('TossAds.initialize');
   // 목록 → 덱 상세 → 목록 왕복
   await t(`__t.clickRow('단어')`); await sleep(400);
-  check('덱 상세로 이동하면 배너 해제', (await slots()).length === 0 && (await placeholders()) === 0);
+  check('단원 상세로 이동하면 배너 해제', (await slots()).length === 0 && (await placeholders()) === 0);
   await evaluate(`history.back()`); await sleep(600);
   check('왕복: initialize 1회·attachBanner 2회·배너 1개', init1 === 1 && (await adCalls('TossAds.initialize')) === 1 && (await adCalls('TossAds.attachBanner')) === 2 && (await placeholders()) === 1,
     `init ${await adCalls('TossAds.initialize')} attach ${await adCalls('TossAds.attachBanner')}`);
@@ -268,7 +268,7 @@ try {
   check('동의 후 다음 완료 화면에 버튼 없음', !(await hasButton('복습 알림 받기')));
 
   // 거부 (N-03)·다른 기능 정상 (N-05)
-  await evaluate(`localStorage.clear()`); await fresh(FLAGS_APP);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(FLAGS_APP);
   const deck2 = await addDueCard(null, 'rej-1');
   await finishSession(FLAGS_APP, deck2);
   await evaluate(`__ait.patch('notification', { nextResult: 'agreementRejected' })`);
@@ -282,7 +282,7 @@ try {
     && JSON.parse(await t(`return __ls('bq:logs:' + (await __mods()).date.todayLocal().slice(0, 7))`)).length === 2);
 
   // 요청 오류
-  await evaluate(`localStorage.clear()`); await fresh(FLAGS_APP);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(FLAGS_APP);
   const deck3 = await addDueCard(null, 'err-1');
   await finishSession(FLAGS_APP, deck3);
   await evaluate(`__ait.patch('failureModes', { requestNotificationAgreement: '5000' })`);
@@ -302,7 +302,7 @@ try {
   check('5.250.0: 알림 미지원 → 버튼 없음·광고는 표시 (N-01)', (await h1()) === '오늘 학습을 마쳤어요' && !(await hasButton('복습 알림 받기')) && (await slots()).length === 1, `${await h1()} ${JSON.stringify(await slots())}`);
   await evaluate(`__ait.update({ appVersion: '5.240.0' })`);
   await t(`history.pushState(null, '', '#/subjects'); dispatchEvent(new PopStateEvent('popstate'))`); await sleep(500);
-  check('5.240.0: 배너 미지원 → 광고 영역·빈 공간 없음', (await h1()) === '과목·덱' && (await slots()).length === 0 && (await placeholders()) === 0);
+  check('5.240.0: 배너 미지원 → 광고 영역·빈 공간 없음', (await h1()) === '과목·단원' && (await slots()).length === 0 && (await placeholders()) === 0);
   await evaluate(`__ait.update({ environment: 'sandbox' })`);
 
   // 광고 없음(No fill) → 영역 접힘

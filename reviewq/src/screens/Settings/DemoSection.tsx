@@ -49,7 +49,7 @@ export default function DemoSection() {
       {confirm && (
         <ConfirmDialog
           title="데모 데이터로 바꿀까요?"
-          detail="지금의 과목·덱·카드와 학습 기록이 데모 데이터로 바뀌어요. 바꾸기 전 데이터는 이 기기에 따로 보관돼요."
+          detail="지금의 과목·단원·카드와 학습 기록이 데모 데이터로 바뀌어요. 바꾸기 전 데이터는 이 기기에 따로 보관돼요."
           confirmLabel="바꾸기"
           onConfirm={fill}
           onClose={() => setConfirm(false)}

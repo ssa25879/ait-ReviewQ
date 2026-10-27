@@ -169,7 +169,7 @@ const ls = (k) => evaluate(`localStorage.getItem('__ait_storage:' + ${JSON.strin
 const setLs = (k, v) => evaluate(`localStorage.setItem('__ait_storage:' + ${JSON.stringify(k)}, ${JSON.stringify(v)})`);
 const delLs = (k) => evaluate(`localStorage.removeItem('__ait_storage:' + ${JSON.stringify(k)})`);
 const TITLE = '저장된 데이터 일부를 읽을 수 없어요';
-const EDIT_BUTTONS = ['카드 추가', '과목 추가', '학습 시작', '과목·덱 관리'];
+const EDIT_BUTTONS = ['카드 추가', '과목 추가', '학습 시작', '과목 관리'];
 
 try {
   await load(APP);
@@ -179,7 +179,7 @@ try {
   const [, tm, td] = today.split('-').map(Number);
 
   // 준비: 덱 A(단어 3장)·덱 B(문법 2장)
-  await evaluate(`localStorage.clear()`);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`);
   await fresh(APP);
   const ids = await t(`
     const { actions } = await __mods();
@@ -208,7 +208,7 @@ try {
   await fresh(APP);
   check('손상 → 복구 화면', (await h1()) === TITLE, await h1());
   const recText = await text();
-  check('손상 1건·백업 날짜와 수 안내', recText.includes('항목 1개') && recText.includes(`${tm}월 ${td}일 백업`) && recText.includes('과목 1개 · 덱 2개 · 카드 5장'), recText.replace(/\n/g, ' / '));
+  check('손상 1건·백업 날짜와 수 안내', recText.includes('항목 1개') && recText.includes(`${tm}월 ${td}일 백업`) && recText.includes('과목 1개 · 단원 2개 · 카드 5장'), recText.replace(/\n/g, ' / '));
   check('세 선택지 표시', (await hasButton('백업으로 복구')) && (await hasButton('손상 항목 빼고 열기')) && (await hasButton('다시 시도')));
   check('편집 버튼 없음', (await t(`return ${JSON.stringify(EDIT_BUTTONS)}.every((b) => __t.buttons(b).length === 0)`)));
   check('진입 시 대화상자 없음', !(await dialogShown()));
@@ -221,7 +221,7 @@ try {
   await sleep(300);
   check('백업으로 복구 → 홈', (await h1()) === '오늘 복습' && (await hash()) === '#/', await h1());
   check('격리 키에 원본 보관', (await ls(`bq:quarantine:${cardsA}`)) === '[{broken');
-  check('덱 A 카드가 백업 내용으로 복원', (await ls(cardsA)) === goodA);
+  check('단원 A 카드가 백업 내용으로 복원', (await ls(cardsA)) === goodA);
   check('복구 후 오늘 복습 5장', (await text()).includes('5장'));
 
   // ── 판정 기록만 손상(백업 있음) → 백업 복구를 제공하지 않는다(멀쩡한 콘텐츠를 되돌리지 않도록)
@@ -245,7 +245,7 @@ try {
   check('백업 없으면 두 선택지만', (await h1()) === TITLE && !(await hasButton('백업으로 복구')) && (await hasButton('손상 항목 빼고 열기')) && (await hasButton('다시 시도')));
   await audit('복구 화면(백업 없음)'); await shot('recovery-no-backup');
   await click('손상 항목 빼고 열기');
-  check('확인 대화상자(사라지는 항목 안내)', (await dialogShown()) && (await t(`return document.querySelector('[role=dialog]').innerText`)).includes('덱 하나의 카드 목록'));
+  check('확인 대화상자(사라지는 항목 안내)', (await dialogShown()) && (await t(`return document.querySelector('[role=dialog]').innerText`)).includes('단원 하나의 카드 목록'));
   await t(`[...document.querySelectorAll('[role=dialog] button')].find((b) => b.textContent.trim() === '취소').click()`); await sleep(300);
   check('취소 → 복구 화면에 머묾·저장 값 불변', (await h1()) === TITLE && !(await dialogShown()) && (await ls(cardsA)) === '{"not":"list"}');
   await click('손상 항목 빼고 열기');
@@ -253,9 +253,9 @@ try {
   check('빼고 열기 → 홈', (await h1()) === '오늘 복습', await h1());
   check('격리 키 보관·원래 키 삭제', (await ls(`bq:quarantine:${cardsA}`)) === '{"not":"list"}' && (await ls(cardsA)) === null);
   await fresh(APP + `#/deck/${ids['단어']}`);
-  check('덱 A 카드 0장', (await text()).includes('카드 0장'));
+  check('단원 A 카드 0장', (await text()).includes('카드 0장'));
   await fresh(APP + `#/deck/${ids['문법']}`);
-  check('덱 B 카드 2장 유지', (await text()).includes('카드 2장') && (await ls(cardsB)) !== null);
+  check('단원 B 카드 2장 유지', (await text()).includes('카드 2장') && (await ls(cardsB)) !== null);
 
   // ── 저장소 읽기 실패: devtools 모의는 localStorage 읽기 오류를 삼키므로, 앱의 저장소 어댑터를 1회 실패시키고
   //    같은 시작 경로(startApp)를 다시 실행한다

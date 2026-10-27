@@ -172,7 +172,7 @@ const subjectRow = (name) => t(`return [...document.querySelectorAll('main li bu
 const fresh = async (url) => { await send('Page.navigate', { url: 'about:blank' }); await sleep(200); await load(url); await hook(); };
 // 저장소를 비우고 홈부터 새로 연다
 async function reset() {
-  await evaluate(`localStorage.clear()`);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`);
   await fresh(APP);
 }
 // { 과목: { 덱: [다음 복습일, ...] } } 대로 만든다. 카드 질문은 덱이름+번호(만든 순서)
@@ -219,12 +219,12 @@ try {
   await reset();
   check('최초 화면 #/ = 홈', (await hash()) === '#/' && (await h1()) === '오늘 복습', await hash());
   check('카드 0장 → 첫 사용 안내', (await text()).includes('복습큐를 시작해 볼까요?'));
-  check('카드 0장 → 과목·덱 만들기 버튼·학습 시작 없음', (await hasButton('과목·덱 만들기')) && !(await hasButton('학습 시작')));
+  check('카드 0장 → 과목·단원 만들기 버튼·학습 시작 없음', (await hasButton('과목·단원 만들기')) && !(await hasButton('학습 시작')));
   check('카드 0장 → 예시 카드로 둘러보기 버튼', await hasButton('예시 카드로 둘러보기'));
   check('진입 시 대화상자 없음', !(await dialogShown()));
   await audit('홈 첫 사용'); await shot('home-first');
-  await click('과목·덱 만들기');
-  check('과목·덱 만들기 → 목록', (await hash()) === '#/subjects' && (await h1()) === '과목·덱');
+  await click('과목·단원 만들기');
+  check('과목·단원 만들기 → 목록', (await hash()) === '#/subjects' && (await h1()) === '과목·단원');
 
   // ── 오늘 2장 + 연체 1장 + 내일 4장
   await reset();
@@ -233,11 +233,11 @@ try {
   const homeText = await text();
   check('오늘 복습 3장·연체 1장', homeText.includes('3장') && homeText.includes('연체 1장'), homeText.replace(/\n/g, ' ').slice(0, 80));
   check('과목별: 영어 3장·수학 0장', (await subjectRow('영어')).includes('3장') && (await subjectRow('수학')).includes('0장'), `${await subjectRow('영어')} / ${await subjectRow('수학')}`);
-  check('하단: 과목·덱 관리 + 학습 시작', (await hasButton('과목·덱 관리')) && (await hasButton('학습 시작')));
+  check('과목 관리 타일 + 하단 학습 시작', (await hasButton('과목 관리')) && (await hasButton('학습 시작')));
   check('상한 안내·시계 경고 없음', !homeText.includes('내일 이어서') && !homeText.includes('기기 날짜'));
   await audit('홈'); await shot('home');
-  await click('과목·덱 관리');
-  check('과목·덱 관리 → 목록', (await hash()) === '#/subjects' && (await h1()) === '과목·덱');
+  await click('과목 관리');
+  check('과목·단원 관리 → 목록', (await hash()) === '#/subjects' && (await h1()) === '과목·단원');
   await evaluate(`history.back()`); await sleep(300);
   check('목록에서 뒤로가기 → 홈', (await hash()) === '#/' && (await h1()) === '오늘 복습');
   await t(`__t.clickRow('수학')`); await sleep(300);
@@ -257,7 +257,7 @@ try {
   await click('홈으로');
   check('홈으로 → 홈', (await hash()) === '#/' && (await h1()) === '오늘 복습');
   check('홈: 오늘 복습 없음 안내·학습 시작 없음', (await text()).includes('오늘 복습할 카드가 없어요') && !(await hasButton('학습 시작')));
-  check('완료 후 홈 하단: 과목·덱 관리', await hasButton('과목·덱 관리'));
+  check('완료 후 홈: 과목 관리 타일', await hasButton('과목 관리'));
 
   // 그만하기 → 홈
   await reset();
@@ -273,7 +273,7 @@ try {
   // ── 모두 내일
   await reset();
   await seed({ 영어: { 단어: [p1, p1] } });
-  check('모두 내일 → 안내·학습 시작 없음', (await text()).includes('오늘 복습할 카드가 없어요') && !(await hasButton('학습 시작')) && (await hasButton('과목·덱 관리')));
+  check('모두 내일 → 안내·학습 시작 없음', (await text()).includes('오늘 복습할 카드가 없어요') && !(await hasButton('학습 시작')) && (await hasButton('과목 관리')));
   await audit('홈 오늘 없음');
   await fresh(APP + '#/study');
   check('빈 큐 #/study → 안내·홈으로', (await h1()) === '오늘 복습' && (await text()).includes('오늘 복습할 카드가 없어요') && (await hasButton('홈으로')));
@@ -288,10 +288,10 @@ try {
   await shot('home-overflow');
   await fresh(APP + `#/deck/${big['단어']}`);
   const deckText = await text();
-  check('덱 상세 120장·나머지 20장 안내', deckText.includes('오늘 복습 120장') && deckText.includes(NOTICE(20)));
-  await audit('덱 상세 상한'); await shot('deck-overflow');
+  check('단원 상세 120장·나머지 20장 안내', deckText.includes('오늘 복습 120장') && deckText.includes(NOTICE(20)));
+  await audit('단원 상세 상한'); await shot('deck-overflow');
   await fresh(APP + `#/deck/${big['문법']}`);
-  check('상한 미만 덱은 안내 없음', !(await text()).includes('내일 이어서'));
+  check('상한 미만 단원은 안내 없음', !(await text()).includes('내일 이어서'));
   await fresh(APP);
   await click('학습 시작');
   check('130장 세션 진행 1 / 100', (await prog()) === '1 / 100', await prog());
@@ -330,11 +330,11 @@ try {
   const expected = shift.date > today ? 3 : 1;
   results.push(`INFO 시간대 ${origTz} → ${shift.tz}(${shift.date}), 기대 ${expected}장`);
   await fresh(APP + `#/deck/${fg['단어']}`);
-  check('덱 상세 오늘 복습 2장(이동 전)', (await text()).includes('오늘 복습 2장'));
+  check('단원 상세 오늘 복습 2장(이동 전)', (await text()).includes('오늘 복습 2장'));
   await send('Emulation.setTimezoneOverride', { timezoneId: shift.tz });
   check('시간대 이동 후 이벤트 전에는 그대로', (await text()).includes('오늘 복습 2장'));
   await evaluate(`document.dispatchEvent(new Event('visibilitychange'))`); await sleep(300);
-  check(`visibilitychange → 덱 상세 오늘 복습 ${expected}장`, (await text()).includes(`오늘 복습 ${expected}장`), (await text()).split('\n').slice(0, 4).join(' / '));
+  check(`visibilitychange → 단원 상세 오늘 복습 ${expected}장`, (await text()).includes(`오늘 복습 ${expected}장`), (await text()).split('\n').slice(0, 4).join(' / '));
   await evaluate(`history.back()`); await sleep(200); await evaluate(`history.back()`); await sleep(300);
   const fgHome = await text();
   check(`홈도 새 날짜 기준 ${expected}장`, (await hash()) === '#/' && (await homeCount()) === `오늘 복습 ${expected}장`, await hash());
@@ -345,17 +345,17 @@ try {
   if (shift.date < today) check('원래 날짜로 복귀 → 경고 해소·2장', !(await text()).includes('기기 날짜') && (await text()).includes('2장'));
   // visibilitychange 없이 화면 이동만으로 재판정(WebView에서 이벤트가 오지 않는 경우)
   await fresh(APP + `#/deck/${fg['단어']}`);
-  check('[회귀] 덱 상세 2장(이동 전)', (await text()).includes('오늘 복습 2장'));
+  check('[회귀] 단원 상세 2장(이동 전)', (await text()).includes('오늘 복습 2장'));
   await send('Emulation.setTimezoneOverride', { timezoneId: shift.tz });
   await evaluate(`history.back()`); await sleep(300);
   await t(`__t.clickRow('단어')`); await sleep(300);
-  check(`[회귀] 이벤트 없이 화면 이동 → 덱 상세 ${expected}장`, (await text()).includes(`오늘 복습 ${expected}장`), (await text()).split('\n').slice(0, 4).join(' / '));
+  check(`[회귀] 이벤트 없이 화면 이동 → 단원 상세 ${expected}장`, (await text()).includes(`오늘 복습 ${expected}장`), (await text()).split('\n').slice(0, 4).join(' / '));
   await evaluate(`history.back()`); await sleep(200); await evaluate(`history.back()`); await sleep(300);
   const navHome = await text();
   check(`[회귀] 이벤트 없이 홈 ${expected}장`, (await hash()) === '#/' && (await homeCount()) === `오늘 복습 ${expected}장`, await hash());
   if (shift.date < today) check('[회귀] 이벤트 없이 홈 시계 경고', navHome.includes('기기 날짜가'));
   await send('Emulation.setTimezoneOverride', { timezoneId: origTz });
-  await click('과목·덱 관리');
+  await click('과목 관리');
   await evaluate(`history.back()`); await sleep(300);
   check('[회귀] 원래 날짜에서 화면 이동 → 홈 2장·경고 없음', (await homeCount()) === '오늘 복습 2장' && !(await text()).includes('기기 날짜'));
   // 세션 중 복귀: 세션 날짜·순서 유지

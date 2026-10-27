@@ -34,13 +34,13 @@ export function SubjectList() {
   return (
     <main className={s.screen}>
       <header className={s.header}>
-        <h1 className={s.title}>과목·덱</h1>
+        <h1 className={s.title}>과목·단원</h1>
       </header>
 
       {state.subjects.length === 0 ? (
         <section className={s.empty}>
           <p className={s.emptyTitle}>아직 과목이 없어요</p>
-          <p className={s.emptyBody}>과목을 만들고 그 안에 덱과 카드를 추가해 보세요.</p>
+          <p className={s.emptyBody}>과목을 만들고 그 안에 단원과 카드를 추가해 보세요.</p>
         </section>
       ) : (
         <div className={styles.subjects}>
@@ -76,7 +76,7 @@ export function SubjectList() {
                     <button
                       type="button"
                       className={ui.iconButton}
-                      aria-label={`${deck.name} 덱 더보기`}
+                      aria-label={`${deck.name} 단원 더보기`}
                       onClick={() => setModal({ kind: 'deckMenu', deck })}
                     >
                       <More />
@@ -85,7 +85,7 @@ export function SubjectList() {
                 ))}
               </ul>
               <button type="button" className={styles.addDeck} onClick={() => setModal({ kind: 'addDeck', subject })}>
-                + 덱 추가
+                + 단원 추가
               </button>
             </section>
           ))}
@@ -154,7 +154,7 @@ export function SubjectList() {
 
       {modal?.kind === 'addDeck' && (
         <NameDialog
-          title={`${modal.subject.name}에 덱 추가`}
+          title={`${modal.subject.name}에 단원 추가`}
           field="deckName"
           submitLabel="만들기"
           warningFor={(name) => (hasDuplicateDeckName(state, modal.subject.id, name) ? DUPLICATE_DECK_WARNING : null)}
@@ -184,7 +184,7 @@ export function SubjectList() {
 
       {modal?.kind === 'renameDeck' && (
         <NameDialog
-          title="덱 이름 바꾸기"
+          title="단원 이름 바꾸기"
           field="deckName"
           initialName={modal.deck.name}
           submitLabel="저장"
@@ -217,7 +217,7 @@ export function SubjectList() {
 
       {modal?.kind === 'deleteDeck' && (
         <ConfirmDialog
-          title={`'${modal.deck.name}' 덱을 삭제할까요?`}
+          title={`'${modal.deck.name}' 단원을 삭제할까요?`}
           detail={deleteDeckDetail(cardCount(state, modal.deck.id))}
           confirmLabel="삭제"
           onConfirm={() => {

@@ -185,7 +185,7 @@ const seedDeck = (subject, deck, cards, review) => t(`
 try {
   // ── 가져올 백업 만들기: 과목 1·덱 1·카드 3장·오늘 판정 1건
   await load(APP); await hook();
-  await evaluate(`localStorage.clear()`); await fresh(APP);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(APP);
   await seedDeck('영어', '단어', [['apple', '사과'], ['pear', '배'], ['plum', '자두']], true);
   await fresh(APP);
   const docText = await t(`
@@ -197,8 +197,8 @@ try {
   check('백업 문서 준비(카드 3장·기록 1건)', Object.values(doc.cards).flat().length === 3 && Object.values(doc.logs).flat().length === 1);
 
   // ── 지금 데이터: 다른 과목 1·카드 1장, Meta에 알림 동의 기록
-  await evaluate(`localStorage.clear()`); await fresh(APP);
-  const oldDeck = await seedDeck('옛과목', '옛덱', [['q', 'a']], false);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(APP);
+  const oldDeck = await seedDeck('옛과목', '옛단원', [['q', 'a']], false);
   await evaluate(`const m = JSON.parse(localStorage.getItem('__ait_storage:bq:meta')); localStorage.setItem('__ait_storage:bq:meta', JSON.stringify({ ...m, notification: { agreed: true, agreedAt: '2026-10-01T00:00:00.000Z', lastAskedAt: '2026-10-01T00:00:00.000Z' } }))`);
   const metaBefore = await ls('bq:meta');
 
@@ -206,46 +206,40 @@ try {
   await fresh(APP + '#/settings');
   check('설정에 백업 가져오기', await hasButton('백업 가져오기'));
   await click('백업 가져오기');
-  check('펼치면 파일 선택·붙여넣기 입력란', (await hasButton('파일 선택')) && (await t(`return !!document.querySelector('textarea')`)) && (await t(`return !!document.querySelector('input[type=file]')`)));
+  check('펼치면 파일 선택·붙여넣기 입력란', (await hasButton('백업 파일 선택')) && (await t(`return !!document.querySelector('textarea')`)) && (await t(`return !!document.querySelector('input[type=file]')`)));
   await t(`window.__picked = 0; HTMLInputElement.prototype.click = function () { if (this.type === 'file') window.__picked++; }`);
-  await click('파일 선택');
+  await click('백업 파일 선택');
   check('파일 선택 → 파일 입력을 연다', (await t(`return window.__picked`)) === 1);
 
   // ── 이유별 안내
   const snap0 = await snapshot();
   await paste('그냥 글');
-  check('JSON 아님 → 안내·바꾸기 없음', (await text()).includes('백업 파일이 아니에요') && !(await hasButton('이 백업으로 바꾸기')));
+  check('JSON 아님 → 안내·바꾸기 없음', (await text()).includes('백업 파일이 아니에요') && (await dialogTitle()) === null);
   await paste(JSON.stringify({ ...doc, subjects: [{ id: 'x' }] }));
-  check('형식 틀림 → 안내', (await text()).includes('형식이 맞지 않아요') && !(await hasButton('이 백업으로 바꾸기')));
+  check('형식 틀림 → 안내', (await text()).includes('형식이 맞지 않아요') && (await dialogTitle()) === null);
   await paste(JSON.stringify({ ...doc, subjects: [] }));
-  check('참조 불일치 → 안내', (await text()).includes('서로 맞지 않아') && !(await hasButton('이 백업으로 바꾸기')));
+  check('참조 불일치 → 안내', (await text()).includes('서로 맞지 않아') && (await dialogTitle()) === null);
   await paste(JSON.stringify({ ...doc, schemaVersion: 99 }));
-  check('새 버전 → 업데이트 안내', (await text()).includes('앱을 업데이트한 뒤') && !(await hasButton('이 백업으로 바꾸기')));
+  check('새 버전 → 업데이트 안내', (await text()).includes('앱을 업데이트한 뒤') && (await dialogTitle()) === null);
   check('불러오기만으로 저장소 불변', (await snapshot()) === snap0);
 
-  // ── 요약·2단계 취소
+  // ── 확인 팝업·취소
   await paste(docText);
-  check('정상 → 요약·내보낸 날짜·바꾸기 버튼', (await text()).includes('과목 1개, 덱 1개, 카드 3장, 학습 기록 1건') && (await text()).includes('내보낸 백업이에요') && (await hasButton('이 백업으로 바꾸기')));
-  await audit('설정(가져오기 요약)'); await shot('import-summary');
-  // 불러온 뒤 입력을 바꾸면 이전 요약으로 바꾸지 않게 결과가 지워진다
-  await t(`__t.setValue(document.querySelector('textarea'), ${JSON.stringify(JSON.stringify({ ...doc, subjects: [] }))})`); await sleep(200);
-  check('불러온 뒤 입력을 바꾸면 요약·바꾸기 버튼 사라짐', !(await text()).includes('과목 1개, 덱 1개') && !(await hasButton('이 백업으로 바꾸기')));
+  check('정상 → 확인 팝업에 요약·내보낸 날짜·경고', (await dialogTitle()) === '이 백업으로 바꿀까요?' && (await text()).includes('과목 1개, 단원 1개, 카드 3장, 학습 기록 1건') && (await text()).includes('내보낸 백업이에요') && (await text()).includes('백업 내용으로 바뀌어요'));
+  check('팝업 버튼: 취소·바꾸기', await t(`return ['취소', '바꾸기'].every((l) => [...document.querySelectorAll('[role=dialog] button')].some((b) => b.textContent.trim() === l))`));
+  await audit('설정(가져오기 확인 팝업)'); await shot('import-confirm');
+  await dialogCancel();
+  check('취소 → 팝업 닫힘·저장소 불변·설정 유지', (await dialogTitle()) === null && (await snapshot()) === snap0 && (await h1()) === '설정');
   await paste(docText);
-  check('다시 불러오면 요약 표시', await hasButton('이 백업으로 바꾸기'));
-  await click('이 백업으로 바꾸기');
-  check('1단계 확인', (await dialogTitle()) === '지금 데이터를 바꿀까요?');
+  check('다시 불러오면 팝업 다시 열림', (await dialogTitle()) === '이 백업으로 바꿀까요?');
   await dialogCancel();
-  await click('이 백업으로 바꾸기'); await click('계속');
-  check('2단계 확인', (await dialogTitle()) === '정말 바꿀까요?');
-  await dialogCancel();
-  check('두 단계 취소 → 저장소 불변', (await snapshot()) === snap0);
 
   // ── 보관 실패 주입
   await t(`
     const { appStorage } = await import('/src/app/bootstrap.ts');
     window.__origSet = appStorage.setItems;
     appStorage.setItems = (entries) => ('bq:backup:beforeImport' in entries ? Promise.reject(new Error('보관 실패 주입')) : window.__origSet(entries));`);
-  await click('이 백업으로 바꾸기'); await click('계속'); await click('바꾸기'); await sleep(500);
+  await click('불러오기'); await sleep(300); await click('바꾸기'); await sleep(500);
   check('보관 실패 → 안내·설정 유지', (await text()).includes('백업을 가져오지 못했어요') && (await h1()) === '설정');
   check('보관 실패 → 데이터 불변', (await snapshot()) === snap0);
   await t(`(await import('/src/app/bootstrap.ts')).appStorage.setItems = window.__origSet`);
@@ -256,14 +250,13 @@ try {
     const card = state.cards[${JSON.stringify(oldDeck)}][0];
     dispatch({ type: 'card/update', id: card.id, deckId: card.deckId, question: card.question, answer: '편집됨', now: new Date().toISOString() });
     await __wait(30);
-    __t.click('이 백업으로 바꾸기'); await __wait(60);
-    __t.click('계속'); await __wait(60);
+    __t.click('불러오기'); await __wait(150);
     __t.click('바꾸기');`);
   await sleep(1500);
   check('가져오기 → 홈', (await hash()) === '#/' && (await h1()) === '오늘 복습');
   const subjects = JSON.parse(await ls('bq:subjects'));
   check('과목이 백업 내용으로 바뀜', subjects.length === 1 && subjects[0].name === '영어', JSON.stringify(subjects.map((s) => s.name)));
-  check('지금에만 있던 덱의 카드 키 삭제·편집이 다시 저장되지 않음', (await ls(`bq:cards:${oldDeck}`)) === null);
+  check('지금에만 있던 단원의 카드 키 삭제·편집이 다시 저장되지 않음', (await ls(`bq:cards:${oldDeck}`)) === null);
   check('Meta(설치 식별자·알림 동의) 유지', (await ls('bq:meta')) === metaBefore);
   const before = JSON.parse(await ls('bq:backup:beforeImport'));
   check('이전 데이터 보관(편집 값 포함)', before.subjects[0]?.name === '옛과목' && Object.values(before.cards).flat()[0]?.answer === '편집됨');
@@ -274,7 +267,7 @@ try {
   check('통계: 오늘 완료 1장·전체 3장', (await text()).includes('오늘 완료') && /오늘 완료\s*1장/.test(await text()) && /전체 카드\s*3장/.test(await text()));
 
   // ── 파일 입력 경로
-  await evaluate(`localStorage.clear()`); await fresh(APP + '#/settings');
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(APP + '#/settings');
   await click('백업 가져오기');
   await t(`
     const input = document.querySelector('input[type=file]');
@@ -283,15 +276,64 @@ try {
     input.files = dt.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));`);
   await sleep(500);
-  check('파일 입력 → 요약', (await text()).includes('과목 1개, 덱 1개, 카드 3장, 학습 기록 1건'));
-  await click('이 백업으로 바꾸기'); await click('계속'); await click('바꾸기'); await sleep(1200);
+  check('파일 입력 → 요약', (await text()).includes('과목 1개, 단원 1개, 카드 3장, 학습 기록 1건'));
+  await click('바꾸기'); await sleep(1200);
   check('파일로 가져오기 → 홈 오늘 복습', (await hash()) === '#/' && (await t(`return JSON.parse(__ls('bq:subjects')).length`)) === 1);
+
+  // ── 백업 코드 공유·복사·붙여넣기 가져오기
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(APP);
+  await seedDeck('수학', '공식', [['원의 넓이', 'πr²'], ['근의 공식', 'x = (-b ± √(b²-4ac)) / 2a']], true);
+  await fresh(APP + '#/settings');
+  await t(`
+    window.__shared = [];
+    Object.defineProperty(navigator, 'share', { configurable: true, value: (d) => { window.__shared.push(d.text); return Promise.resolve(); } });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (v) => { window.__clip = v; } } });`);
+  check('설정에 백업 코드 공유·파일로 저장', (await hasButton('백업 코드 공유')) && (await hasButton('파일로 저장')));
+  await t(`__t.click('백업 코드 공유'); __t.click('백업 코드 공유');`); await sleep(800);
+  const shared = await t(`return window.__shared`);
+  const shownCode = await t(`return document.querySelector('textarea[readonly]')?.value ?? ''`);
+  check('공유 시트 1회·메시지에 안내와 코드', shared.length === 1 && shared[0].includes('복습큐 백업 코드예요') && /RQB1\.[A-Za-z0-9_-]+$/.test(shared[0]), String(shared.length));
+  check('화면에 같은 코드 표시', shownCode.startsWith('RQB1.') && shared[0]?.endsWith(shownCode));
+  await audit('설정(백업 코드)'); await shot('backup-code');
+  await click('코드 복사');
+  check('코드 복사 → 클립보드·안내', (await t(`return window.__clip`)) === shownCode && (await text()).includes('코드를 복사했어요'));
+  // 공유 실패: SDK 모듈의 Share.sendMessage를 실패하게 바꾼다(devtools 모의는 navigator.share 오류를 삼킨다)
+  const patched = await t(`
+    const url = performance.getEntriesByType('resource').map((e) => e.name).find((n) => n.includes('/@apps-in-toss/devtools/dist/mock/'));
+    if (!url) return false;
+    const mod = await import(url);
+    const share = mod.Share ?? Object.values(mod).find((v) => v && typeof v.sendMessage === 'function');
+    if (!share) return false;
+    window.__origSend = share.sendMessage; window.__shareObj = share;
+    share.sendMessage = () => Promise.reject(new Error('공유 실패 주입'));
+    return true;`);
+  if (patched) {
+    await click('백업 코드 공유'); await sleep(600);
+    check('공유 실패 → 안내·코드 표시', (await text()).includes('공유 창을 열지 못했어요') && (await t(`return (document.querySelector('textarea[readonly]')?.value ?? '').startsWith('RQB1.')`)));
+    await t(`window.__shareObj.sendMessage = window.__origSend`);
+  } else {
+    results.push('INFO 공유 실패 주입 불가(SDK 모듈을 찾지 못함) — 확인 생략');
+  }
+
+  // 공유 메시지 전체를 다른(빈) 기기에 붙여넣어 가져오기
+  const message = shared[0];
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`); await fresh(APP + '#/settings');
+  await click('백업 가져오기');
+  await paste(message.slice(0, -10));
+  check('잘린 코드 → 안내·바꾸기 없음', (await text()).includes('백업 코드가 올바르지 않아요') && (await dialogTitle()) === null);
+  await paste(message);
+  check('공유 메시지 전체 붙여넣기 → 요약', (await text()).includes('과목 1개, 단원 1개, 카드 2장, 학습 기록 1건'));
+  await click('바꾸기'); await sleep(1200);
+  const restored = JSON.parse(await ls('bq:subjects'));
+  check('코드로 가져오기 → 홈·과목 복원', (await hash()) === '#/' && restored.length === 1 && restored[0].name === '수학');
+  const restoredCards = JSON.parse(await t(`return __ls('bq:cards:' + JSON.parse(__ls('bq:decks'))[0].id)`));
+  check('코드로 가져오기 → 한글·특수문자 카드 그대로', restoredCards.some((c) => c.answer === 'x = (-b ± √(b²-4ac)) / 2a'));
 
   for (const [name, a] of Object.entries(audits)) {
     check(`글자 13px 이상: ${name}`, a.minFont >= 13, `최소 ${a.minFont}px("${a.minAt}")`);
     check(`터치 44px 이상: ${name}`, a.small.length === 0, a.small.join(', '));
   }
-  const unexpected = consoleErrors.filter((e) => !/백업 가져오기 실패/.test(e));
+  const unexpected = consoleErrors.filter((e) => !/백업 가져오기 실패|백업 코드 공유 실패/.test(e));
   check('예상 밖 콘솔 오류 없음', unexpected.length === 0, unexpected.join(' | '));
 } catch (e) {
   check('스크립트 실행', false, e.message);

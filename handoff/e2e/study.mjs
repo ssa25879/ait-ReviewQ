@@ -203,10 +203,10 @@ try {
 
   // ── 2.1 덱 상세 진입(숙어 2장)
   await fresh(deckUrl(ids['숙어'])); await hook();
-  check('덱 상세: "오늘 복습 2장"', (await t(`return __t.text()`)).includes('오늘 복습 2장'));
+  check('단원 상세: "오늘 복습 2장"', (await t(`return __t.text()`)).includes('오늘 복습 2장'));
   const entryHeights = await t(`return ['카드 추가', '학습하기'].map((x) => __t.buttons(x)[0]?.getBoundingClientRect().height ?? 0)`);
-  check('덱 상세: 카드 추가·학습하기 버튼 44px 이상', entryHeights.every((h) => h >= 44), entryHeights.join(','));
-  await audit('덱 상세(오늘 복습 있음)');
+  check('단원 상세: 카드 추가·학습하기 버튼 44px 이상', entryHeights.every((h) => h >= 44), entryHeights.join(','));
+  await audit('단원 상세(오늘 복습 있음)');
   await t(`__t.click('학습하기')`); await settle();
   check('학습하기 → study 경로', (await hash()) === `#/deck/${ids['숙어']}/study`, await hash());
 
@@ -239,21 +239,21 @@ try {
   await shot('study-done');
   check('[수정4] 완료 → 포커스가 완료 제목', await activeIs(`document.querySelector('h1')`));
   check('[수정3] 완료 → iOS 스와이프 다시 켬', (await lastSwipe()) === 'on', swipeLog.join(','));
-  await t(`const b = __t.buttons('덱으로 돌아가기')[0]; b.click(); b.click();`); await sleep(400);
-  check('[수정1] 돌아가기 두 번 탭 → 덱 상세(한 단계만)',(await t(`return __t.h1()`)) === '숙어' && (await hash()) === `#/deck/${ids['숙어']}`);
+  await t(`const b = __t.buttons('단원으로 돌아가기')[0]; b.click(); b.click();`); await sleep(400);
+  check('[수정1] 돌아가기 두 번 탭 → 단원 상세(한 단계만)',(await t(`return __t.h1()`)) === '숙어' && (await hash()) === `#/deck/${ids['숙어']}`);
   const afterText = await t(`return __t.text()`);
-  check(`덱 상세에 갱신된 다음 복습 ${tomorrowLabel} 2장`, afterText.split(`다음 복습 ${tomorrowLabel}`).length - 1 === 2);
+  check(`단원 상세에 갱신된 다음 복습 ${tomorrowLabel} 2장`, afterText.split(`다음 복습 ${tomorrowLabel}`).length - 1 === 2);
   check('모두 내일 예정 → 안내 문구, 학습하기 없음', afterText.includes('오늘 복습할 카드가 없어요') && (await t(`return __t.buttons('학습하기').length`)) === 0);
-  await audit('덱 상세(오늘 복습 없음)');
+  await audit('단원 상세(오늘 복습 없음)');
 
   // ── 3.1 빈 큐 주소
   await fresh(`${deckUrl(ids['숙어'])}/study`); await hook();
   check('빈 큐: 안내 문구', (await t(`return __t.text()`)).includes('오늘 복습할 카드가 없어요'));
-  check('[수정2] 빈 큐 본문: 알림 약속 없음', (await t(`return __t.text()`)).includes('다음 복습일이 되면 이 덱에서 다시 학습할 수 있어요.')
+  check('[수정2] 빈 큐 본문: 알림 약속 없음', (await t(`return __t.text()`)).includes('다음 복습일이 되면 이 단원에서 다시 학습할 수 있어요.')
     && !(await t(`return __t.text()`)).includes('알려 드릴게요'));
   await audit('빈 큐');
-  await t(`__t.click('덱으로 돌아가기')`); await settle();
-  check('빈 큐 돌아가기 → 덱 상세', (await t(`return __t.h1()`)) === '숙어');
+  await t(`__t.click('단원으로 돌아가기')`); await settle();
+  check('빈 큐 돌아가기 → 단원 상세', (await t(`return __t.h1()`)) === '숙어');
 
   // ── 3.1 세션(단어 3장)
   await fresh(`${deckUrl(ids['단어'])}/study`); await hook();
@@ -287,7 +287,7 @@ try {
   for (let i = 0; i < 2; i++) { await flipCard(); await t(`${judgeBtn('기억함')}.click()`); await settle(); }
   check('단어 완료 화면', (await t(`return __t.h1()`)) === '오늘 학습을 마쳤어요');
   await evaluate(`history.back()`); await sleep(300);
-  check('완료 후 뒤로가기 → 확인 없이 덱 상세', !(await dialogShown()) && (await t(`return __t.h1()`)) === '단어', await hash());
+  check('완료 후 뒤로가기 → 확인 없이 단원 상세', !(await dialogShown()) && (await t(`return __t.h1()`)) === '단어', await hash());
 
   // ── 진행 수(문법 3장): 첫 카드 기억 못 함 → 2 / 4
   await fresh(`${deckUrl(ids['문법'])}/study`); await hook();
@@ -321,10 +321,10 @@ try {
   check('다시 backEvent → 확인 표시', await dialogShown());
   await t(`const b = [...document.querySelectorAll('[role=dialog] button')].find((x) => x.textContent.trim() === '그만하기'); b.click(); b.click();`); await sleep(400);
   check('[수정3] 그만하기 → iOS 스와이프 다시 켬', (await lastSwipe()) === 'on', swipeLog.join(','));
-  check('[수정1] 그만하기 두 번 탭 → 덱 상세(한 단계만)', (await t(`return __t.h1()`)) === '문법' && (await hash()) === `#/deck/${ids['문법']}`, await hash());
+  check('[수정1] 그만하기 두 번 탭 → 단원 상세(한 단계만)', (await t(`return __t.h1()`)) === '문법' && (await hash()) === `#/deck/${ids['문법']}`, await hash());
   check('그만하기 후 판정 결과 유지(로그)', (await logCount()) === logsBeforeBack + 1);
   check('그만하기 후 backEvent 구독 해제', (await evaluate(`globalThis.__aitDevtoolsBackSubscribers__ ?? 0`)) === 0);
-  check('덱 상세: 남은 오늘 복습 1장(g3)', (await t(`return __t.text()`)).includes('오늘 복습 1장'));
+  check('단원 상세: 남은 오늘 복습 1장(g3)', (await t(`return __t.text()`)).includes('오늘 복습 1장'));
   await evaluate(`history.back()`); await sleep(300);
   check('이어서 뒤로가기 → 목록', (await hash()) === '#/subjects' &&!(await dialogShown()), await hash());
 

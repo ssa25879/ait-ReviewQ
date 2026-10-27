@@ -175,7 +175,7 @@ try {
   const m2 = await D(-2);
 
   // ── 빈 상태
-  await evaluate(`localStorage.clear()`);
+  await evaluate(`localStorage.clear(); localStorage.setItem('__ait_storage:bq:guide', 'true')`);
   await fresh(APP);
   check('홈에 통계 행(카드 0장)', await t(`return [...document.querySelectorAll('main button')].some((b) => b.textContent.trim() === '통계')`));
   await clickStats();

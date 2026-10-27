@@ -57,29 +57,53 @@
   color: var(--color-text-strong);
 }
 
-/* 하단 버튼 두 개(보조·주) */
-.actions {
-  display: flex;
-  gap: var(--space-2);
-}
 
-.actions > * {
-  flex: 1;
-}
 
-/* 통계 진입 행 — 과목별 요약과 구분선 */
-.statsRow {
-  border-top: 1px solid var(--color-bg-canvas);
-}
-
-/* 설정 진입 행 — 통계 행 바로 아래에 목록처럼 붙인다(화면 gap 상쇄) */
-.settingsRow {
-  margin-top: calc(-1 * var(--space-5));
-  border-top: 1px solid var(--color-bg-canvas);
-}
 
 /* 첫 사용 안내 안의 예시 덱 버튼 — 안내 배경(canvas)과 구분되도록 흰 배경 */
 .sampleButton {
   margin-top: var(--space-2);
   background: var(--color-bg);
+}
+
+/* 머리말: 앱 이름·오늘 날짜(홈이 첫 화면임을 알린다) */
+.brand {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  font-weight: 600;
+  color: var(--brand-accent-text);
+}
+
+/* 바로가기 타일 3칸 */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 84px;
+  padding: var(--space-3) var(--space-2);
+  border: 0;
+  border-radius: 16px;
+  background: var(--color-bg-canvas);
+  color: var(--color-text-strong);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tileIcon {
+  display: flex;
+  color: var(--brand-accent);
+}
+
+.tileLabel {
+  font-size: var(--font-size-body-small);
+  font-weight: 600;
+  word-break: keep-all;
 }

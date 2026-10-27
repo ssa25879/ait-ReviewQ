@@ -24,7 +24,7 @@ describe('messages', () => {
   });
 
   it('삭제 확인 문구는 함께 지워지는 수를 알린다', () => {
-    expect(deleteSubjectDetail({ decks: 2, cards: 5 })).toBe('덱 2개·카드 5장도 함께 삭제돼요.');
+    expect(deleteSubjectDetail({ decks: 2, cards: 5 })).toBe('단원 2개·카드 5장도 함께 삭제돼요.');
     expect(deleteDeckDetail(3)).toBe('카드 3장도 함께 삭제돼요.');
   });
 
@@ -56,8 +56,8 @@ describe('복구 문구', () => {
     expect(['bq:meta', 'bq:subjects', 'bq:decks', 'bq:cards:d1', 'bq:logs:2026-09'].map(corruptItemLabel)).toEqual([
       '앱 설정 정보',
       '과목 목록',
-      '덱 목록',
-      '덱 하나의 카드 목록',
+      '단원 목록',
+      '단원 하나의 카드 목록',
       '9월 학습 기록',
     ]);
     expect(RECOVERY.backupTitle('2026-10-25')).toBe('10월 25일 백업');

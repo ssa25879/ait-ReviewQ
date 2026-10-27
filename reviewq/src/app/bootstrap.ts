@@ -3,6 +3,7 @@ import { type ClockCheck, checkClock } from '../domain/clock';
 import type { Meta } from '../domain/model';
 import { createAitStorage } from '../infra/storage/aitStorage';
 import { type Backup, readBackup } from '../infra/storage/backup';
+import { readGuideSeen } from '../infra/storage/guide';
 import { type AppLoad, loadApp } from '../infra/storage/loadApp';
 import { canRestoreFromBackup, dropCorrupt, restoreFromBackup } from '../infra/storage/recovery';
 import { todayLocal } from '../utils/date';
@@ -15,7 +16,7 @@ export const metaStore = createMetaStore(appStorage);
 
 // 정상 로드면 시계 판정 결과를, 손상이면 사용할 수 있는 백업을 더한다
 export type AppStart =
-  | (Extract<AppLoad, { kind: 'ok' }> & { clock: ClockCheck; today: string })
+  | (Extract<AppLoad, { kind: 'ok' }> & { clock: ClockCheck; today: string; guideSeen: boolean })
   | (Extract<AppLoad, { kind: 'corrupt' }> & { backup: Backup | null; today: string })
   | (Extract<AppLoad, { kind: 'readFailed' }> & { today: string });
 
@@ -29,8 +30,8 @@ async function startApp(): Promise<AppStart> {
     return { ...loaded, backup, today };
   }
   metaStore.reset(loaded.meta);
-  const clock = await openWith(loaded.meta, today);
-  return { ...loaded, meta: metaStore.get() ?? loaded.meta, clock, today };
+  const [clock, guideSeen] = await Promise.all([openWith(loaded.meta, today), readGuideSeen(appStorage)]);
+  return { ...loaded, meta: metaStore.get() ?? loaded.meta, clock, today, guideSeen };
 }
 
 // 오늘 날짜로 시계를 판정하고, 되돌림이 아니면 마지막으로 연 날을 오늘로 저장한다(앱 시작·포그라운드 복귀·화면 이동).

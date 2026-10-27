@@ -6,6 +6,7 @@ import { SaveErrorNotice } from "./components/SaveErrorNotice";
 import { CardBulk } from "./screens/CardBulk/CardBulk";
 import { CardEditor } from "./screens/CardEditor/CardEditor";
 import { DeckDetail } from "./screens/DeckDetail/DeckDetail";
+import { Guide } from "./screens/Guide/Guide";
 import { Home } from "./screens/Home/Home";
 import { LoadFailed, Recovery } from "./screens/Recovery/Recovery";
 import { Settings } from "./screens/Settings/Settings";
@@ -15,8 +16,8 @@ import { SubjectList } from "./screens/SubjectList/SubjectList";
 import s from "./screens/screen.module.css";
 
 function App() {
-  const { status, state } = useContent();
-  const { route, replace } = useRoute();
+  const { status, state, guideSeen } = useContent();
+  const { route, replace, navigate } = useRoute();
 
   const stateRef = useRef(state);
   useEffect(() => {
@@ -28,6 +29,17 @@ function App() {
   useEffect(() => {
     if (status === "ready" && !routeTargetExists(stateRef.current, route)) replace({ name: "home" });
   }, [status, route, replace]);
+
+  // 최초 실행 가이드는 앱 시작 후 첫 ready 때 한 번만 판단한다. 가이드에서 뒤로가기로 홈에 오거나
+  // 전체 삭제 뒤 다시 불러와도 같은 실행 중에는 다시 열지 않는다
+  const guideCheckedRef = useRef(false);
+  useEffect(() => {
+    if (status !== "ready" || guideCheckedRef.current) return;
+    guideCheckedRef.current = true;
+    const hasCards = Object.values(stateRef.current.cards).some((cards) => cards.length > 0);
+    // 홈 위에 쌓아야 가이드를 끝내거나 뒤로가기를 했을 때 홈으로 돌아온다(replace면 앱을 벗어난다)
+    if (!guideSeen && !hasCards && route.name === "home") navigate({ name: "guide" });
+  }, [status, guideSeen, route, navigate]);
 
   if (status === "loading") return <p className={s.notice}>불러오는 중이에요</p>;
   // 손상 데이터를 덮어쓰지 않도록 편집 화면 대신 복구·다시 시도 화면을 연다
@@ -65,6 +77,8 @@ function Screen({ route }: { route: Route }) {
       return <Stats />;
     case "settings":
       return <Settings />;
+    case "guide":
+      return <Guide />;
   }
 }
 

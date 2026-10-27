@@ -26,6 +26,8 @@ export interface ContentContextValue {
   // 저장 대기 변경을 버리고 과목·덱·카드·판정 기록을 문서 내용으로 바꾼 뒤 다시 불러온다(백업 가져오기·데모 데이터).
   // 실패하면 저장소를 다시 읽고 예외를 던진다
   replaceAll: (doc: ExportDoc) => Promise<void>;
+  guideSeen: boolean; // 최초 실행 가이드를 봤는지(시작 로드 때 읽은 값)
+  markGuideSeen: () => void; // 본 기록을 저장한다. 저장 실패는 다음 실행에 가이드가 다시 보일 뿐이라 기록만 남긴다
 }
 
 export const ContentContext = createContext<ContentContextValue | null>(null);

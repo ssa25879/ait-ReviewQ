@@ -3,7 +3,8 @@ import { type ContentAction, type ContentState, contentReducer, emptyContent } f
 import type { StorageAdapter } from './StorageAdapter';
 import { readBackup } from './backup';
 import { type ExportDoc, buildExport } from './exportData';
-import { importBackup, parseImport } from './importData';
+import { encodeBackupCode } from './backupCode';
+import { importBackup, parseImport, parseImportInput } from './importData';
 import { BEFORE_IMPORT_KEY, DECKS_KEY, META_KEY, SUBJECTS_KEY, cardsKey, logsKey } from './keys';
 import { loadContent } from './loadContent';
 import { createMemoryStorage } from './memoryStorage';
@@ -115,5 +116,22 @@ describe('importBackup', () => {
     };
     await expect(importBackup({ storage: failing, doc: await docOf(source), current, schemaVersion: 2, today })).rejects.toThrow('저장 실패');
     expect(await storage.getItems([SUBJECTS_KEY, DECKS_KEY, cardsKey('dOld'), logsKey('2026-09')])).toEqual(snapshot);
+  });
+});
+
+describe('parseImportInput', () => {
+  it('백업 코드·공유 메시지 전체·JSON을 모두 받는다', async () => {
+    const doc = await docOf(source);
+    const code = await encodeBackupCode(doc);
+    const summary = { subjects: 2, decks: 2, cards: 3, logs: 1, exportedAt: at(today) };
+    expect(await parseImportInput(code)).toMatchObject({ ok: true, summary });
+    expect(await parseImportInput(`복습큐 백업 코드예요.\n\n${code}`)).toMatchObject({ ok: true, summary });
+    expect(await parseImportInput(JSON.stringify(doc))).toMatchObject({ ok: true, summary });
+  });
+
+  it('잘린 코드는 badCode, 코드가 없는 글은 기존 이유', async () => {
+    const code = await encodeBackupCode(await docOf(source));
+    expect(await parseImportInput(code.slice(0, -12))).toEqual({ ok: false, reason: 'badCode' });
+    expect(await parseImportInput('그냥 글')).toEqual({ ok: false, reason: 'notJson' });
   });
 });

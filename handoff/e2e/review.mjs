@@ -169,7 +169,7 @@ try {
   // 준비: 과목·덱·카드 2장(UI)
   await t(`__t.click('과목 추가')`); await settle();
   await t(`__t.fillDialog('영어'); __t.click('만들기')`); await settle();
-  await t(`__t.click('+ 덱 추가', 0)`); await settle();
+  await t(`__t.click('+ 단원 추가', 0)`); await settle();
   await t(`__t.fillDialog('단어'); __t.click('만들기')`); await settle();
   await t(`__t.clickRow('단어')`); await settle();
   await t(`__t.click('카드 추가')`); await settle();
@@ -254,7 +254,7 @@ try {
 
   // 새로고침 → 일정·로그 유지, 화면에 내일 표시
   await reload(); await hook();
-  check('새로고침 후 덱 상세 유지', (await t(`return __t.h1()`)) === '단어');
+  check('새로고침 후 단원 상세 유지', (await t(`return __t.h1()`)) === '단어');
   const dueLabels = (await t(`return __t.text()`)).split(`다음 복습 ${tomorrowLabel}`).length - 1;
   check(`새로고침 후 두 카드 "다음 복습 ${tomorrowLabel}"`, dueLabels === 2, `${dueLabels}개`);
   await shot('day3-deck-detail-after-review');

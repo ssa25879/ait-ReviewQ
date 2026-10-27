@@ -75,7 +75,7 @@ export function NameDialog({ title, field, initialName = '', submitLabel, warnin
     <Dialog title={title} onClose={onClose}>
       <form onSubmit={submit} noValidate>
         <label htmlFor={inputId} className={ui.fieldLabel}>
-          {field === 'subjectName' ? '과목 이름' : '덱 이름'}
+          {field === 'subjectName' ? '과목 이름' : '단원 이름'}
         </label>
         <input
           id={inputId}
@@ -103,7 +103,7 @@ export function NameDialog({ title, field, initialName = '', submitLabel, warnin
 
 interface ConfirmDialogProps {
   title: string;
-  detail: string;
+  detail: ReactNode;
   confirmLabel: string;
   onConfirm: () => void;
   onClose: () => void;

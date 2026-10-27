@@ -1,6 +1,7 @@
 import type { ContentState } from '../../domain/content';
 import type { StorageAdapter } from './StorageAdapter';
 import { saveBackup } from './backup';
+import { decodeBackupCode, extractBackupCode } from './backupCode';
 import { EXPORT_FORMAT, EXPORT_FORMAT_VERSION, type ExportDoc, buildExport, exportLogMonths, validateExport } from './exportData';
 import { BEFORE_IMPORT_KEY, DECKS_KEY, SUBJECTS_KEY, cardsKey, logsKey } from './keys';
 import { SCHEMA_VERSION } from './meta';
@@ -13,7 +14,7 @@ export interface ImportSummary {
   exportedAt: string; // ISO 8601
 }
 
-export type ImportFailure = 'notJson' | 'invalid' | 'newer' | 'inconsistent';
+export type ImportFailure = 'notJson' | 'invalid' | 'newer' | 'inconsistent' | 'badCode';
 export type ParsedImport = { ok: true; doc: ExportDoc; summary: ImportSummary } | { ok: false; reason: ImportFailure };
 
 // 문서 안에서 덱의 과목, 카드 목록의 덱, 카드의 deckId가 서로 맞는지
@@ -57,6 +58,17 @@ export function parseImport(text: string): ParsedImport {
       exportedAt: value.exportedAt,
     },
   };
+}
+
+// 붙여넣었거나 파일에서 읽은 글을 검사한다. 백업 코드(공유 메시지 전체 포함)가 있으면 풀어서, 없으면 JSON으로 본다
+export async function parseImportInput(text: string): Promise<ParsedImport> {
+  const code = extractBackupCode(text);
+  if (!code) return parseImport(text);
+  try {
+    return parseImport(await decodeBackupCode(code));
+  } catch {
+    return { ok: false, reason: 'badCode' }; // 잘렸거나 손상된 코드
+  }
 }
 
 interface ImportBackupDeps {

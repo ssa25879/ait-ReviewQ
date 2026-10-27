@@ -1,0 +1,133 @@
+/* 진행 표시와 건너뛰기 */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+
+.progress {
+  font-size: var(--font-size-body-small);
+  font-weight: 600;
+  color: var(--brand-accent-text);
+}
+
+.skip {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-subtle);
+  font: inherit;
+  font-size: var(--font-size-body-small);
+  cursor: pointer;
+}
+
+/* 장마다 바뀌는 예시 그림(장식이라 읽기 순서에서 뺀다) */
+.illustration {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6) 0 var(--space-2);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 320px;
+  padding: var(--space-5);
+  border-radius: 20px;
+  background: var(--color-bg-canvas);
+}
+
+.cardLabel {
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.cardText {
+  font-size: var(--font-size-title);
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.cardDivider {
+  height: 1px;
+  margin: var(--space-1) 0;
+  background: var(--color-text-disabled);
+}
+
+.bigNumber {
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-display);
+  color: var(--brand-accent-text);
+}
+
+.cardSub {
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-subtle);
+  word-break: keep-all;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.chipGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.chip {
+  padding: var(--space-1) var(--space-2);
+  border-radius: 999px;
+  background: var(--color-bg);
+  font-size: var(--font-size-body-small);
+  font-weight: 600;
+  color: var(--brand-accent-text);
+}
+
+.chipArrow {
+  display: inline-flex;
+  color: var(--color-text-hint);
+  font-size: 14px;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-title);
+  color: var(--color-text-strong);
+  word-break: keep-all;
+}
+
+.body {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-default);
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* 마지막 장 버튼 두 개(보조·주) */
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.actions > * {
+  flex: 1;
+}
