@@ -1,0 +1,67 @@
+/* 저장 위치 고지 — 화면 맨 위에 항상 보인다 */
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: 16px;
+  background: var(--color-bg-canvas);
+}
+
+.noticeTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--color-text-strong);
+  word-break: keep-all;
+}
+
+.noticeBody {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-subtle);
+  word-break: keep-all;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--font-size-subtitle);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--color-text-strong);
+}
+
+.body {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-default);
+  word-break: keep-all;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-subtle);
+  word-break: keep-all;
+}
+
+.success {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-success);
+  word-break: keep-all;
+}
+
+/* 파일로 저장할 수 없을 때 직접 복사하는 백업 내용 */
+.exportText {
+  min-height: 200px;
+  font-family: ui-monospace, monospace;
+  font-size: var(--font-size-body-small);
+  line-height: 1.4;
+  white-space: pre;
+}

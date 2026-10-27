@@ -22,6 +22,8 @@ export interface SaveQueue {
   enqueue(changes: ContentChanges): void;
   // 대기 중인 타이머를 취소하고 즉시 저장한다. 실행 중인 저장이 있으면 끝난 뒤 실행한다
   flush(): Promise<void>;
+  // 대기 중인 변경과 예약된 저장·재시도를 버린다(전체 삭제 전). 실행 중인 저장이 있으면 끝난 뒤 그 실패분까지 버린다
+  discard(): Promise<void>;
 }
 
 // 키별 마지막 값만 보관했다가 디바운스 후 한 번에 저장한다.
@@ -97,6 +99,23 @@ export function createSaveQueue({
     return tail;
   }
 
+  function drop() {
+    resetRetry();
+    if (timer !== undefined) clearTimeout(timer);
+    timer = undefined;
+    pending.clear();
+  }
+
+  function discard(): Promise<void> {
+    drop();
+    // 실행 중인 저장이 실패하면 배치를 되돌리고 재시도를 예약하므로, 끝난 뒤 한 번 더 버린다
+    tail = tail.then(() => {
+      drop();
+      setStatus('ok');
+    });
+    return tail;
+  }
+
   return {
     enqueue({ set, remove }) {
       for (const [key, value] of Object.entries(set)) pending.set(key, { value });
@@ -110,5 +129,6 @@ export function createSaveQueue({
       }, delayMs);
     },
     flush,
+    discard,
   };
 }

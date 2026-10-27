@@ -7,6 +7,7 @@ import { CardEditor } from "./screens/CardEditor/CardEditor";
 import { DeckDetail } from "./screens/DeckDetail/DeckDetail";
 import { Home } from "./screens/Home/Home";
 import { LoadFailed, Recovery } from "./screens/Recovery/Recovery";
+import { Settings } from "./screens/Settings/Settings";
 import { Stats } from "./screens/Stats/Stats";
 import { StudySession } from "./screens/Study/StudySession";
 import { SubjectList } from "./screens/SubjectList/SubjectList";
@@ -59,6 +60,8 @@ function Screen({ route }: { route: Route }) {
       return <StudySession key="all" />;
     case "stats":
       return <Stats />;
+    case "settings":
+      return <Settings />;
   }
 }
 

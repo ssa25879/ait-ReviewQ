@@ -148,4 +148,42 @@ export const NOTIFY = {
   ask: '복습 알림 받기',
   agreed: '복습 알림을 받을 수 있어요.',
   failed: '알림 설정을 열지 못했어요. 잠시 후 다시 시도해 주세요.',
+  // 설정의 '복습 알림' 항목
+  settingsTitle: '복습 알림',
+  stateAgreed: '복습 알림을 받고 있어요',
+  stateRejected: '복습 알림을 받지 않고 있어요',
+  stateUnset: '아직 정하지 않았어요',
+  settingsAsk: '알림 받기',
+  offHint: '알림을 끄려면 토스 앱 설정에서 바꿀 수 있어요.',
+};
+
+export const SETTINGS = {
+  entry: '설정',
+  title: '설정',
+  storageTitle: '데이터는 이 기기에만 저장돼요',
+  storageBody: '토스 앱을 지우거나 기기를 바꾸면 학습 데이터가 사라져요. 가끔 백업을 내보내 보관해 두세요.',
+  backupTitle: '백업',
+  dataTitle: '데이터',
+  clear: '모든 데이터 삭제',
+  clearConfirmTitle: '모든 데이터를 지울까요?',
+  clearConfirmBody: '과목·덱·카드와 학습 기록, 알림 설정 기록이 모두 지워지고 되돌릴 수 없어요. 먼저 백업을 내보내 두세요.',
+  clearContinue: '계속',
+  clearFinalTitle: '정말 지울까요?',
+  clearFinalBody: '지운 데이터는 다시 볼 수 없어요.',
+  clearFinalConfirm: '삭제',
+  clearing: '지우는 중이에요',
+  clearFailed: '데이터를 지우지 못했어요. 다시 시도해 주세요.',
+  retry: '다시 시도',
+};
+
+export const EXPORT = {
+  description: '과목·덱·카드와 학습 기록을 JSON 파일 하나로 저장해요.',
+  action: '백업 내보내기',
+  working: '내보내는 중이에요',
+  saved: (fileName: string) => `백업 파일(${fileName})을 저장했어요.`,
+  saveFailed: '파일로 저장하지 못했어요. 아래 내용을 복사해 보관해 주세요.',
+  unsupported: '이 기기에서는 파일로 저장할 수 없어요. 아래 내용을 복사해 보관해 주세요.',
+  copyHint: '길게 눌러 전체 선택한 뒤 복사해 주세요.',
+  textLabel: '백업 내용',
+  failed: '백업을 만들지 못했어요. 잠시 후 다시 시도해 주세요.',
 };

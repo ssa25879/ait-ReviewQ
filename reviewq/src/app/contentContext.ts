@@ -19,6 +19,9 @@ export interface ContentContextValue {
   reload: () => Promise<void>; // 저장소에서 다시 불러온다("다시 시도")
   saveFailed: boolean; // 재시도까지 모두 실패해 저장하지 못한 변경이 있다
   retrySave: () => void; // 저장하지 못한 변경을 바로 다시 저장한다
+  flushSave: () => Promise<void>; // 저장 대기 중인 변경을 바로 저장한다(내보내기 전)
+  // 저장 대기 변경을 버리고 앱 저장소를 모두 지운 뒤 빈 상태로 다시 불러온다. 지우지 못하면 저장소를 다시 읽고 예외를 던진다
+  clearAll: () => Promise<void>;
 }
 
 export const ContentContext = createContext<ContentContextValue | null>(null);

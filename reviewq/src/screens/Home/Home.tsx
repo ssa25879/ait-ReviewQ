@@ -5,7 +5,7 @@ import { ChevronRight } from '../../components/icons';
 import ui from '../../components/ui.module.css';
 import { buildQueue } from '../../domain/queue';
 import { dueCountBySubject, overdueCount } from '../../domain/selectors';
-import { HOME, STATS, clockWarning, overflowNotice } from '../messages';
+import { HOME, SETTINGS, STATS, clockWarning, overflowNotice } from '../messages';
 import s from '../screen.module.css';
 import styles from './Home.module.css';
 
@@ -79,6 +79,15 @@ export function Home() {
       <button type="button" className={`${s.row} ${styles.statsRow}`} onClick={() => navigate({ name: 'stats' })}>
         <span className={s.rowMain}>
           <span className={s.rowTitle}>{STATS.entry}</span>
+        </span>
+        <span className={s.rowChevron}>
+          <ChevronRight />
+        </span>
+      </button>
+
+      <button type="button" className={`${s.row} ${styles.settingsRow}`} onClick={() => navigate({ name: 'settings' })}>
+        <span className={s.rowMain}>
+          <span className={s.rowTitle}>{SETTINGS.entry}</span>
         </span>
         <span className={s.rowChevron}>
           <ChevronRight />

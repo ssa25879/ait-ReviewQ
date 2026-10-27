@@ -10,6 +10,7 @@ import { ContentContext, type LoadStatus, type RecoveryInfo } from './contentCon
 let onSaveStatus: (status: SaveStatus) => void = () => {};
 const saveQueue = createSaveQueue({ storage: appStorage, onStatus: (status) => onSaveStatus(status) });
 const retrySave = () => void saveQueue.flush();
+const flushSave = () => saveQueue.flush();
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [state, rawDispatch] = useReducer(contentReducer, emptyContent);
@@ -59,6 +60,19 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     await reloadApp();
   }, []);
 
+  const clearAll = useCallback(async () => {
+    // 지우는 동안 상태가 바뀌어도 저장 큐에 다시 넣지 않는다(다시 불러오면 새 상태로 채워진다)
+    savedRef.current = null;
+    await saveQueue.discard();
+    try {
+      await appStorage.clearItems();
+    } catch (error) {
+      await reloadApp(); // 저장소의 실제 상태로 맞춘다
+      throw error;
+    }
+    await reloadApp();
+  }, []);
+
   const recovery = useMemo<RecoveryInfo | null>(
     () =>
       corrupt && {
@@ -95,8 +109,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, state, dispatch, recovery, reload, saveFailed, retrySave }),
-    [status, state, dispatch, recovery, reload, saveFailed],
+    () => ({ status, state, dispatch, recovery, reload, saveFailed, retrySave, flushSave, clearAll }),
+    [status, state, dispatch, recovery, reload, saveFailed, clearAll],
   );
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;
 }

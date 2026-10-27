@@ -71,3 +71,9 @@
 .statsRow {
   border-top: 1px solid var(--color-bg-canvas);
 }
+
+/* 설정 진입 행 — 통계 행 바로 아래에 목록처럼 붙인다(화면 gap 상쇄) */
+.settingsRow {
+  margin-top: calc(-1 * var(--space-5));
+  border-top: 1px solid var(--color-bg-canvas);
+}

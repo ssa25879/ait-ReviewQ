@@ -1,11 +1,12 @@
 import type { ContentState } from '../domain/content';
 
-// 해시 기반 경로: #/ · #/subjects · #/study · #/stats · #/deck/{deckId} · #/deck/{deckId}/card/new · #/deck/{deckId}/card/{cardId} · #/deck/{deckId}/study
+// 해시 기반 경로: #/ · #/subjects · #/study · #/stats · #/settings · #/deck/{deckId} · #/deck/{deckId}/card/new · #/deck/{deckId}/card/{cardId} · #/deck/{deckId}/study
 export type Route =
   | { name: 'home' }
   | { name: 'subjects' }
   | { name: 'studyAll' }
   | { name: 'stats' }
+  | { name: 'settings' }
   | { name: 'deck'; deckId: string }
   | { name: 'cardNew'; deckId: string }
   | { name: 'cardEdit'; deckId: string; cardId: string }
@@ -20,6 +21,7 @@ export function parseRoute(hash: string): Route {
   if (parts.length === 1 && parts[0] === 'subjects') return SUBJECTS;
   if (parts.length === 1 && parts[0] === 'study') return { name: 'studyAll' };
   if (parts.length === 1 && parts[0] === 'stats') return { name: 'stats' };
+  if (parts.length === 1 && parts[0] === 'settings') return { name: 'settings' };
   if (parts[0] !== 'deck' || !parts[1]) return ROOT;
   const deckId = parts[1];
   if (parts.length === 2) return { name: 'deck', deckId };
@@ -40,6 +42,8 @@ export function formatRoute(route: Route): string {
       return '#/study';
     case 'stats':
       return '#/stats';
+    case 'settings':
+      return '#/settings';
     case 'deck':
       return `#/deck/${encodeURIComponent(route.deckId)}`;
     case 'cardNew':
@@ -59,6 +63,7 @@ export function seedRoutes(route: Route): Route[] {
     case 'subjects':
     case 'studyAll':
     case 'stats':
+    case 'settings':
       return [ROOT];
     case 'deck':
       return [ROOT, SUBJECTS];
@@ -71,7 +76,7 @@ export function seedRoutes(route: Route): Route[] {
 
 // 경로가 가리키는 덱·카드가 있는지(없으면 홈으로 바꾼다)
 export function routeTargetExists(state: ContentState, route: Route): boolean {
-  if (!('deckId' in route)) return true; // 홈·목록·전체 세션·통계는 대상이 없다
+  if (!('deckId' in route)) return true; // 홈·목록·전체 세션·통계·설정은 대상이 없다
   if (!state.decks.some((d) => d.id === route.deckId)) return false;
   if (route.name === 'cardEdit') return state.cards[route.deckId]?.some((c) => c.id === route.cardId) ?? false;
   return true;

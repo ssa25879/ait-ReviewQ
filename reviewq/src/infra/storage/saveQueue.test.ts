@@ -178,3 +178,64 @@ describe('saveQueue 재시도', () => {
     expect((await storage.getItems(['bq:cards:A']))['bq:cards:A']).toBe('["a1"]');
   });
 });
+
+describe('saveQueue discard', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('대기 중인 변경은 discard 뒤 저장되지 않는다', async () => {
+    const storage = spiedStorage();
+    const queue = createSaveQueue({ storage });
+
+    queue.enqueue({ set: { 'bq:cards:A': ['a1'] }, remove: [] });
+    await queue.discard();
+    await vi.advanceTimersByTimeAsync(1000);
+    await queue.flush();
+    expect(storage.setItems).not.toHaveBeenCalled();
+  });
+
+  it('예약된 재시도를 취소하고 상태를 ok로 되돌린다', async () => {
+    const storage = spiedStorage();
+    const onStatus = vi.fn();
+    const queue = createSaveQueue({ storage, onError: () => {}, onStatus, retryDelaysMs: [1000] });
+    vi.mocked(storage.setItems).mockRejectedValue(new Error('UNKNOWN_ERROR'));
+
+    queue.enqueue({ set: { 'bq:cards:A': ['a1'] }, remove: [] });
+    await queue.flush();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(onStatus).toHaveBeenLastCalledWith('failed');
+
+    queue.enqueue({ set: { 'bq:cards:A': ['a2'] }, remove: [] });
+    await queue.flush(); // 실패 → 1초 뒤 재시도 예약
+    await queue.discard();
+    expect(onStatus).toHaveBeenLastCalledWith('ok');
+    const calls = vi.mocked(storage.setItems).mock.calls.length;
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(vi.mocked(storage.setItems).mock.calls.length).toBe(calls);
+  });
+
+  it('실행 중인 저장이 끝날 때까지 기다리고, 그 실패분도 버린다', async () => {
+    const storage = spiedStorage();
+    const queue = createSaveQueue({ storage, onError: () => {} });
+    let reject!: (e: Error) => void;
+    vi.mocked(storage.setItems).mockImplementationOnce(() => new Promise((_, r) => (reject = r)));
+
+    queue.enqueue({ set: { 'bq:cards:A': ['a1'] }, remove: [] });
+    void queue.flush();
+    await vi.advanceTimersByTimeAsync(0);
+    let done = false;
+    const discarding = queue.discard().then(() => (done = true));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(done).toBe(false);
+
+    reject(new Error('UNKNOWN_ERROR'));
+    await discarding;
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(storage.setItems).toHaveBeenCalledTimes(1);
+    expect((await storage.getItems(['bq:cards:A']))['bq:cards:A']).toBeNull();
+  });
+});
