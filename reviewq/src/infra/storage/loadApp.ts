@@ -4,7 +4,7 @@ import type { StorageAdapter } from './StorageAdapter';
 import { saveBackup } from './backup';
 import { META_KEY } from './keys';
 import { loadContent } from './loadContent';
-import { initMeta } from './meta';
+import { initMeta, migrateMeta } from './meta';
 
 // 시작 로드 결과. 손상(형식 문제)과 저장소 호출 실패(접근 문제)를 나눈다
 export type AppLoad =
@@ -25,14 +25,21 @@ export async function loadApp({ storage, today, newId }: LoadAppDeps): Promise<A
     const content = await loadContent(storage, today);
     const corrupt = { ...(meta.ok ? {} : { [META_KEY]: meta.raw }), ...(content.ok ? {} : content.corrupt) };
     if (!meta.ok || !content.ok) return { kind: 'corrupt', corrupt, meta: meta.ok ? meta.meta : null };
+    // 이전 버전 Meta는 현재 버전으로 올려 저장한다(다른 키는 바꾸지 않는다)
+    const current = migrateMeta(meta.meta);
+    if (current !== meta.meta) {
+      await storage.setItems({ [META_KEY]: JSON.stringify(current) }).catch((error: unknown) => {
+        console.error('[reviewq] Meta 버전 올림 저장 실패', error); // 다음 Meta 저장 때 함께 저장된다
+      });
+    }
     // 그날 첫 정상 실행(마지막으로 연 날이 오늘 이전)에만 백업한다. 큰 백업 키를 매번 읽지 않기 위해서다.
     // 백업 키는 카드 수에 비례해 커서, 홈이 늦게 열리지 않도록 저장을 기다리지 않는다
-    if (meta.meta.lastOpenedDate < today) {
+    if (current.lastOpenedDate < today) {
       saveBackup(storage, content.content, today).catch((error: unknown) => {
         console.error('[reviewq] 백업 저장 실패', error); // 다음 날 다시 시도된다
       });
     }
-    return { kind: 'ok', meta: meta.meta, content: content.content };
+    return { kind: 'ok', meta: current, content: content.content };
   } catch (error) {
     return { kind: 'readFailed', error };
   }

@@ -1,14 +1,17 @@
 import { Storage } from '@apps-in-toss/web-framework';
 import { type ClockCheck, checkClock } from '../domain/clock';
+import type { Meta } from '../domain/model';
 import { createAitStorage } from '../infra/storage/aitStorage';
 import { type Backup, readBackup } from '../infra/storage/backup';
 import { type AppLoad, loadApp } from '../infra/storage/loadApp';
-import { recordOpened } from '../infra/storage/meta';
 import { canRestoreFromBackup, dropCorrupt, restoreFromBackup } from '../infra/storage/recovery';
 import { todayLocal } from '../utils/date';
 import { newId } from '../utils/id';
+import { createMetaStore } from './metaStore';
 
 export const appStorage = createAitStorage(Storage);
+// bq:meta를 쓰는 유일한 곳(마지막으로 연 날·알림 동의 기록)
+export const metaStore = createMetaStore(appStorage);
 
 // 정상 로드면 시계 판정 결과를, 손상이면 사용할 수 있는 백업을 더한다
 export type AppStart =
@@ -25,16 +28,26 @@ async function startApp(): Promise<AppStart> {
     const backup = await readBackup(appStorage).catch(() => null);
     return { ...loaded, backup, today };
   }
-  let { meta } = loaded;
-  let clock: ClockCheck;
-  try {
-    ({ meta, clock } = await recordOpened(appStorage, meta, today));
-  } catch (error) {
-    // 메타 저장 실패는 화면 동작에 영향이 없고 다음 복귀 때 다시 시도된다
-    console.error('[reviewq] lastOpenedDate 저장 실패', error);
-    clock = { rolledBack: checkClock(meta.lastOpenedDate, today).rolledBack, lastOpenedDate: meta.lastOpenedDate };
+  metaStore.reset(loaded.meta);
+  const clock = await openWith(loaded.meta, today);
+  return { ...loaded, meta: metaStore.get() ?? loaded.meta, clock, today };
+}
+
+// 오늘 날짜로 시계를 판정하고, 되돌림이 아니면 마지막으로 연 날을 오늘로 저장한다(앱 시작·포그라운드 복귀·화면 이동).
+// 저장이 실패해도 판정 결과는 돌려준다(메모리 값은 metaStore가 유지한다). Meta 로드 전이면 null
+export async function markOpened(today: string): Promise<ClockCheck | null> {
+  const meta = metaStore.get();
+  return meta ? openWith(meta, today) : null;
+}
+
+async function openWith(meta: Meta, today: string): Promise<ClockCheck> {
+  const clock = checkClock(meta.lastOpenedDate, today);
+  if (clock.lastOpenedDate !== meta.lastOpenedDate) {
+    await metaStore
+      .update((m) => ({ ...m, lastOpenedDate: checkClock(m.lastOpenedDate, today).lastOpenedDate }))
+      .catch((error: unknown) => console.error('[reviewq] lastOpenedDate 저장 실패', error));
   }
-  return { ...loaded, meta, clock, today };
+  return clock;
 }
 
 // StrictMode의 effect 이중 실행과 무관하게 앱 시작 시 1회만 실행하고, "다시 시도"·복구 때만 다시 실행한다

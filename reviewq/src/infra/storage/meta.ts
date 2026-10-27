@@ -4,7 +4,24 @@ import type { StorageAdapter } from './StorageAdapter';
 import { META_KEY } from './keys';
 import { isMeta, parseValid } from './validate';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
+
+// 버전 N → N+1 변환. 각 함수는 이전 버전 Meta를 받아 다음 버전 Meta를 돌려주는 순수 함수다(기획서 7.5)
+const MIGRATIONS: Record<number, (meta: Meta) => Meta> = {
+  // v2: 알림 동의 기록(notification)을 추가한다. 필드는 비운 채(아직 묻지 않음) 버전만 올린다
+  1: (meta) => ({ ...meta, schemaVersion: 2 }),
+};
+
+// 저장된 Meta를 현재 버전으로 올린다. 이미 현재 버전이면 같은 객체를 돌려준다
+export function migrateMeta(meta: Meta): Meta {
+  let current = meta;
+  while (current.schemaVersion < SCHEMA_VERSION) {
+    const step = MIGRATIONS[current.schemaVersion];
+    if (!step) throw new Error(`Meta v${current.schemaVersion} 마이그레이션 없음`);
+    current = step(current);
+  }
+  return current;
+}
 
 interface InitMetaDeps {
   storage: StorageAdapter;

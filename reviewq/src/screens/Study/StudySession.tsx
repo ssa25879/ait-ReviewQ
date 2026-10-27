@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import { actions } from '../../app/actions';
 import { useContent } from '../../app/contentContext';
 import { useRoute } from '../../app/routeContext';
+import { flags } from '../../config/flags';
+import { AdSlot } from '../../components/AdSlot';
+import { NotificationOptIn } from '../../components/NotificationOptIn';
 import { ConfirmDialog } from '../../components/Dialog';
 import ui from '../../components/ui.module.css';
 import { buildQueue } from '../../domain/queue';
@@ -151,6 +154,8 @@ function SessionView({ deckId, title, backLabel, emptyBody }: SessionViewProps) 
           </div>
         </dl>
         {initial.overflow > 0 && <p className={s.meta}>{overflowNotice(initial.overflow)}</p>}
+        <NotificationOptIn />
+        <AdSlot adGroupId={flags.adGroupIds.sessionDone} placement="sessionDone" />
         <div className={ui.bottomSpacer} />
         <div className={ui.bottomBar}>
           <button type="button" className={ui.primary} onClick={leave}>

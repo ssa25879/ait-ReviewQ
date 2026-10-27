@@ -143,3 +143,9 @@ export const SAVE_ERROR = {
   body: '변경 내용을 저장하지 못했어요. 앱을 닫기 전에 다시 시도해 주세요.',
   retry: '다시 시도',
 };
+
+export const NOTIFY = {
+  ask: '복습 알림 받기',
+  agreed: '복습 알림을 받을 수 있어요.',
+  failed: '알림 설정을 열지 못했어요. 잠시 후 다시 시도해 주세요.',
+};

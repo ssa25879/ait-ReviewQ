@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { META_KEY } from './keys';
 import { createMemoryStorage } from './memoryStorage';
 import type { StorageAdapter } from './StorageAdapter';
-import { initMeta, recordOpened, saveLastOpenedDate } from './meta';
+import { initMeta, migrateMeta, recordOpened, saveLastOpenedDate } from './meta';
 
 // 정상 Meta를 기대하는 테스트용
 async function okMeta(storage: StorageAdapter, today: string, id: string) {
@@ -12,11 +12,11 @@ async function okMeta(storage: StorageAdapter, today: string, id: string) {
 }
 
 describe('initMeta', () => {
-  it('빈 저장소에서 schemaVersion 1·오늘 날짜·installId로 Meta를 만들어 저장한다', async () => {
+  it('빈 저장소에서 schemaVersion 2·오늘 날짜·installId로 Meta를 만들고 알림 기록은 없다', async () => {
     const storage = createMemoryStorage();
     const meta = await okMeta(storage, '2026-10-26', 'install-1');
 
-    const expected = { schemaVersion: 1, lastOpenedDate: '2026-10-26', installId: 'install-1' };
+    const expected = { schemaVersion: 2, lastOpenedDate: '2026-10-26', installId: 'install-1' };
     expect(meta).toEqual(expected);
     const { [META_KEY]: raw } = await storage.getItems([META_KEY]);
     expect(JSON.parse(raw!)).toEqual(expected);
@@ -55,7 +55,7 @@ describe('saveLastOpenedDate / recordOpened', () => {
   it('saveLastOpenedDate는 lastOpenedDate만 바꿔 저장한다', async () => {
     const { storage, meta, stored } = await setup();
     const next = await saveLastOpenedDate(storage, meta, '2026-10-26');
-    expect(next).toEqual({ schemaVersion: 1, lastOpenedDate: '2026-10-26', installId: 'install-1' });
+    expect(next).toEqual({ schemaVersion: 2, lastOpenedDate: '2026-10-26', installId: 'install-1' });
     expect(await stored()).toEqual(next);
   });
 
@@ -83,5 +83,17 @@ describe('saveLastOpenedDate / recordOpened', () => {
     const spy = { ...storage, setItems: async (e: Record<string, string>) => { writes++; await storage.setItems(e); } };
     await recordOpened(spy, meta, '2026-10-25');
     expect(writes).toBe(0);
+  });
+});
+
+describe('migrateMeta', () => {
+  it('v1은 알림 기록 없이 버전만 2로 올린다', () => {
+    const v1 = { schemaVersion: 1, lastOpenedDate: '2026-10-26', installId: 'i1' };
+    expect(migrateMeta(v1)).toEqual({ ...v1, schemaVersion: 2 });
+  });
+
+  it('현재 버전이면 같은 객체를 돌려준다', () => {
+    const v2 = { schemaVersion: 2, lastOpenedDate: '2026-10-26', installId: 'i1' };
+    expect(migrateMeta(v2)).toBe(v2);
   });
 });

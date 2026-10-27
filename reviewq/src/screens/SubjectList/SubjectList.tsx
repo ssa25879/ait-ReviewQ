@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { actions } from '../../app/actions';
 import { useContent } from '../../app/contentContext';
 import { useRoute } from '../../app/routeContext';
+import { flags } from '../../config/flags';
+import { AdSlot } from '../../components/AdSlot';
 import { ConfirmDialog, MenuDialog, NameDialog } from '../../components/Dialog';
 import { ChevronRight, More } from '../../components/icons';
 import ui from '../../components/ui.module.css';
@@ -90,6 +92,8 @@ export function SubjectList() {
         </div>
       )}
 
+      {/* 과목을 만들기 전의 빈 화면에는 광고를 두지 않는다(목록이 있는 화면에만 배너) */}
+      {state.subjects.length > 0 && <AdSlot adGroupId={flags.adGroupIds.subjects} placement="subjects" />}
       <div className={ui.bottomSpacer} />
       <div className={ui.bottomBar}>
         <button type="button" className={ui.primary} onClick={() => setModal({ kind: 'addSubject' })}>

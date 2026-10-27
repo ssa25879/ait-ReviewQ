@@ -121,7 +121,7 @@ describe('손상 항목 빼고 열기', () => {
     await dropCorrupt({ storage, corrupt: { [META_KEY]: '{broken' }, today, newId });
     expect(await get(storage, quarantineKey(META_KEY))).toBe('{broken');
     const loaded = await loadApp({ storage, today, newId });
-    expect(loaded.kind === 'ok' && loaded.meta).toEqual({ schemaVersion: 1, lastOpenedDate: today, installId: 'new-install' });
+    expect(loaded.kind === 'ok' && loaded.meta).toEqual({ schemaVersion: 2, lastOpenedDate: today, installId: 'new-install' });
   });
 });
 
