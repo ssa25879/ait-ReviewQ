@@ -276,7 +276,7 @@ try {
   const prevMonth = await t(`const { date: D } = await __mods(); return D.addDays('${month}-01', -1).slice(0, 7)`);
   const twoAgo = await t(`const { date: D } = await __mods(); return D.addDays('${prevMonth}-01', -1).slice(0, 7)`);
   await t(`
-    localStorage.setItem('__ait_storage:bq:logs:${prevMonth}', JSON.stringify([{ id: 'old', cardId: '${apple}', date: '${prevMonth}-15', grade: 'remember', prevStage: 0, nextStage: 1, reviewedAt: 'x' }]));
+    localStorage.setItem('__ait_storage:bq:logs:${prevMonth}', JSON.stringify([{ id: 'old', cardId: '${apple}', date: '${prevMonth}-15', grade: 'remember', prevStage: 0, nextStage: 1, reviewedAt: '${prevMonth}-15T00:00:00.000Z' }]));
     localStorage.setItem('__ait_storage:bq:logs:${twoAgo}', '[{broken');
   `);
   await reload(); await hook();
@@ -284,14 +284,14 @@ try {
   check(`로드 범위: ${month}·${prevMonth}만, ${twoAgo}(손상) 무시`,
     JSON.stringify(range) === JSON.stringify({ [month]: 2, [prevMonth]: 1 }), JSON.stringify(range));
 
-  // 이번 달 로그 손상 → 오류 화면, 값 덮어쓰지 않음
+  // 이번 달 로그 손상 → 복구 화면(day5), 값 덮어쓰지 않음
   const goodRaw = await t(`return __ls('bq:logs:${month}')`);
   await t(`localStorage.setItem('__ait_storage:bq:logs:${month}', '[{broken')`);
   await send('Page.reload');
   await sleep(300);
-  await waitFor(`document.querySelector('[role=alert]')`);
+  await waitFor(`document.querySelector('h1')?.textContent === '저장된 데이터 일부를 읽을 수 없어요'`);
   await sleep(1000);
-  check('손상된 이번 달 로그 → 오류 안내', (await evaluate(`document.querySelector('[role=alert]').innerText`)).includes('불러오지 못했어요'));
+  check('손상된 이번 달 로그 → 복구 화면', (await evaluate(`document.body.innerText`)).includes('읽을 수 없는 항목 1개'));
   check('손상 값 덮어쓰지 않음', (await evaluate(`localStorage.getItem('__ait_storage:bq:logs:${month}')`)) === '[{broken');
   await shot('day3-load-error');
   await evaluate(`localStorage.setItem('__ait_storage:bq:logs:${month}', ${JSON.stringify(goodRaw)})`);

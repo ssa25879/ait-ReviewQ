@@ -1,0 +1,37 @@
+.error {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-danger);
+}
+
+/* 본문 안 보조 동작(텍스트 버튼) — 탭 영역 44px */
+.retry {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-subtle);
+  font: inherit;
+  font-size: var(--font-size-body-small);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.retry:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+/* 하단 버튼 두 개를 세로로 쌓는다(주 버튼 위). 선택지 문구가 길어 반폭에서 두 줄로 꺾이기 때문이다 */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* 버튼이 두 줄인 하단 바만큼 본문 아래 여백 */
+.tallSpacer {
+  height: 170px;
+}

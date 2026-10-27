@@ -3,7 +3,7 @@ import { checkClock } from '../domain/clock';
 import type { Meta } from '../domain/model';
 import { recordOpened } from '../infra/storage/meta';
 import { todayLocal } from '../utils/date';
-import { appStorage, bootstrap } from './bootstrap';
+import { appStorage, subscribeAppStart } from './bootstrap';
 import { useRoute } from './routeContext';
 import { TodayContext, type TodayValue } from './todayContext';
 
@@ -49,13 +49,12 @@ export function TodayProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     activeRef.current = true;
-    bootstrap.then(
-      ({ meta, clock, today }) => {
-        metaRef.current = meta;
-        update({ today, clockRolledBack: clock.rolledBack, lastOpenedDate: clock.lastOpenedDate });
-      },
-      () => {}, // 로드 실패는 ContentProvider가 알린다
-    );
+    // 복구 후 다시 불러온 결과도 받는다
+    const unsubscribe = subscribeAppStart((start) => {
+      if (start.kind !== 'ok') return; // 로드 실패는 ContentProvider가 알린다
+      metaRef.current = start.meta;
+      update({ today: start.today, clockRolledBack: start.clock.rolledBack, lastOpenedDate: start.clock.lastOpenedDate });
+    });
 
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') void refresh();
@@ -63,6 +62,7 @@ export function TodayProvider({ children }: { children: ReactNode }) {
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       activeRef.current = false;
+      unsubscribe();
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [update, refresh]);

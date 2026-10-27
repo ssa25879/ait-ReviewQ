@@ -97,3 +97,84 @@ describe('saveQueue', () => {
     expect((await storage.getItems(['bq:cards:A']))['bq:cards:A']).toBe('["new"]');
   });
 });
+
+describe('saveQueue 재시도', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('일시적 실패는 1초 뒤 다시 저장하고 실패 상태를 알리지 않는다 (D-03)', async () => {
+    const storage = spiedStorage();
+    const onStatus = vi.fn();
+    const queue = createSaveQueue({ storage, onError: () => {}, onStatus });
+
+    vi.mocked(storage.setItems).mockRejectedValueOnce(new Error('UNKNOWN_ERROR'));
+    queue.enqueue({ set: { 'bq:cards:A': ['a1'] }, remove: [] });
+    await queue.flush();
+    expect(storage.setItems).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(999);
+    expect(storage.setItems).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(storage.setItems).toHaveBeenCalledTimes(2);
+    expect((await storage.getItems(['bq:cards:A']))['bq:cards:A']).toBe('["a1"]');
+    expect(onStatus).not.toHaveBeenCalled();
+  });
+
+  it('처음 시도와 1·2·4초 간격 재시도 3회가 모두 실패하면 failed를 알리고 자동 재시도를 멈춘다', async () => {
+    const storage = spiedStorage();
+    const onStatus = vi.fn();
+    const queue = createSaveQueue({ storage, onError: () => {}, onStatus });
+    vi.mocked(storage.setItems).mockRejectedValue(new Error('UNKNOWN_ERROR'));
+
+    queue.enqueue({ set: { 'bq:cards:A': ['a1'] }, remove: [] });
+    await queue.flush();
+    const calls = () => vi.mocked(storage.setItems).mock.calls.length;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(calls()).toBe(2);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(calls()).toBe(3);
+    expect(onStatus).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(calls()).toBe(4);
+    expect(onStatus).toHaveBeenCalledWith('failed');
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(calls()).toBe(4);
+  });
+
+  it('실패 상태에서 다음 변경·flush가 다시 저장하고 성공하면 ok를 알린다', async () => {
+    const storage = spiedStorage();
+    const onStatus = vi.fn();
+    const queue = createSaveQueue({ storage, onError: () => {}, onStatus, retryDelaysMs: [] });
+    vi.mocked(storage.setItems).mockRejectedValueOnce(new Error('UNKNOWN_ERROR'));
+
+    queue.enqueue({ set: { 'bq:cards:A': ['a1'] }, remove: [] });
+    await queue.flush();
+    expect(onStatus).toHaveBeenLastCalledWith('failed');
+
+    queue.enqueue({ set: { 'bq:cards:B': ['b1'] }, remove: [] });
+    await queue.flush();
+    expect(onStatus).toHaveBeenLastCalledWith('ok');
+    expect(await storage.getItems(['bq:cards:A', 'bq:cards:B'])).toEqual({
+      'bq:cards:A': '["a1"]',
+      'bq:cards:B': '["b1"]',
+    });
+  });
+
+  it('flush만 다시 불러도(다시 시도) 실패분을 저장한다', async () => {
+    const storage = spiedStorage();
+    const onStatus = vi.fn();
+    const queue = createSaveQueue({ storage, onError: () => {}, onStatus, retryDelaysMs: [] });
+    vi.mocked(storage.setItems).mockRejectedValueOnce(new Error('UNKNOWN_ERROR'));
+
+    queue.enqueue({ set: { 'bq:cards:A': ['a1'] }, remove: [] });
+    await queue.flush();
+    await queue.flush();
+    expect(onStatus.mock.calls).toEqual([['failed'], ['ok']]);
+    expect((await storage.getItems(['bq:cards:A']))['bq:cards:A']).toBe('["a1"]');
+  });
+});
