@@ -4,7 +4,9 @@ import { type Route, formatRoute, parseRoute, routeTargetExists, seedRoutes } fr
 
 describe('parseRoute / formatRoute', () => {
   const routes: Route[] = [
+    { name: 'home' },
     { name: 'subjects' },
+    { name: 'studyAll' },
     { name: 'deck', deckId: 'd1' },
     { name: 'cardNew', deckId: 'd1' },
     { name: 'cardEdit', deckId: 'd1', cardId: 'c1' },
@@ -16,29 +18,48 @@ describe('parseRoute / formatRoute', () => {
   });
 
   it('형식', () => {
+    expect(formatRoute({ name: 'home' })).toBe('#/');
+    expect(formatRoute({ name: 'subjects' })).toBe('#/subjects');
+    expect(formatRoute({ name: 'studyAll' })).toBe('#/study');
     expect(formatRoute({ name: 'cardEdit', deckId: 'd1', cardId: 'c1' })).toBe('#/deck/d1/card/c1');
     expect(formatRoute({ name: 'study', deckId: 'd1' })).toBe('#/deck/d1/study');
   });
 
-  it.each(['', '#', '#/', '#/unknown', '#/deck', '#/deck/d1/x', '#/deck/d1/card', '#/deck/d1/studyx', '#/deck/d1/study/x'])('알 수 없는 해시 %j는 목록', (hash) => {
-    expect(parseRoute(hash)).toEqual({ name: 'subjects' });
+  it.each([
+    '', '#', '#/', '#/unknown', '#/subjects/x', '#/study/x', '#/deck', '#/deck/d1/x', '#/deck/d1/card', '#/deck/d1/studyx', '#/deck/d1/study/x',
+  ])('알 수 없는 해시 %j는 홈', (hash) => {
+    expect(parseRoute(hash)).toEqual({ name: 'home' });
   });
 });
 
 describe('seedRoutes', () => {
-  it('목록은 채울 것이 없다', () => {
-    expect(seedRoutes({ name: 'subjects' })).toEqual([]);
+  it('홈은 채울 것이 없다', () => {
+    expect(seedRoutes({ name: 'home' })).toEqual([]);
   });
 
-  it('카드 편집으로 시작하면 목록·덱 상세를 채운다', () => {
+  it('과목·덱 목록과 전체 덱 세션은 홈을 채운다', () => {
+    expect(seedRoutes({ name: 'subjects' })).toEqual([{ name: 'home' }]);
+    expect(seedRoutes({ name: 'studyAll' })).toEqual([{ name: 'home' }]);
+  });
+
+  it('덱 상세로 시작하면 홈·목록을 채운다', () => {
+    expect(seedRoutes({ name: 'deck', deckId: 'd1' })).toEqual([{ name: 'home' }, { name: 'subjects' }]);
+  });
+
+  it('카드 편집으로 시작하면 홈·목록·덱 상세를 채운다', () => {
     expect(seedRoutes({ name: 'cardEdit', deckId: 'd1', cardId: 'c1' })).toEqual([
+      { name: 'home' },
       { name: 'subjects' },
       { name: 'deck', deckId: 'd1' },
     ]);
   });
 
-  it('학습 세션으로 시작하면 목록·덱 상세를 채운다', () => {
-    expect(seedRoutes({ name: 'study', deckId: 'd1' })).toEqual([{ name: 'subjects' }, { name: 'deck', deckId: 'd1' }]);
+  it('덱 학습 세션으로 시작하면 홈·목록·덱 상세를 채운다', () => {
+    expect(seedRoutes({ name: 'study', deckId: 'd1' })).toEqual([
+      { name: 'home' },
+      { name: 'subjects' },
+      { name: 'deck', deckId: 'd1' },
+    ]);
   });
 });
 
@@ -55,7 +76,9 @@ const state = (
 
 describe('routeTargetExists', () => {
   it('없는 덱·카드를 가리키면 false', () => {
+    expect(routeTargetExists(state, { name: 'home' })).toBe(true);
     expect(routeTargetExists(state, { name: 'subjects' })).toBe(true);
+    expect(routeTargetExists(state, { name: 'studyAll' })).toBe(true);
     expect(routeTargetExists(state, { name: 'deck', deckId: 'd1' })).toBe(true);
     expect(routeTargetExists(state, { name: 'deck', deckId: 'nope' })).toBe(false);
     expect(routeTargetExists(state, { name: 'cardNew', deckId: 'd2' })).toBe(true);

@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { validateCardText, validateName } from '../domain/validation';
-import { deleteDeckDetail, deleteSubjectDetail, dueTodayLabel, progressLabel, rememberedPercent, validationMessage } from './messages';
+import {
+  clockWarning,
+  deleteDeckDetail,
+  deleteSubjectDetail,
+  dueTodayLabel,
+  overflowNotice,
+  progressLabel,
+  rememberedPercent,
+  validationMessage,
+} from './messages';
 
 describe('messages', () => {
   it('사유·대상별 안내 문구', () => {
@@ -23,5 +32,12 @@ describe('messages', () => {
     expect(rememberedPercent(2, 3)).toBe(67);
     expect(rememberedPercent(0, 0)).toBe(0);
     expect(progressLabel(1, 3)).toBe('3장 중 1번째');
+  });
+});
+
+describe('홈·상한 문구', () => {
+  it('상한 초과 안내와 시계 경고', () => {
+    expect(overflowNotice(30)).toBe('오늘은 100장까지 학습해요. 나머지 30장은 내일 이어서 나와요.');
+    expect(clockWarning('2026-10-26')).toBe('기기 날짜가 마지막으로 앱을 연 날(10월 26일)보다 이전이에요. 날짜 설정을 확인해 주세요.');
   });
 });

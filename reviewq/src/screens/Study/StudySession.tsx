@@ -18,25 +18,38 @@ import {
   summarize,
 } from '../../domain/session';
 import { todayLocal } from '../../utils/date';
-import { STUDY, progressLabel, rememberedPercent } from '../messages';
+import { STUDY, overflowNotice, progressLabel, rememberedPercent } from '../messages';
 import s from '../screen.module.css';
 import styles from './StudySession.module.css';
 
-export function StudySession({ deckId }: { deckId: string }) {
+// deckId가 없으면 전체 덱 세션(홈에서 시작)이다
+export function StudySession({ deckId }: { deckId?: string }) {
   const { state } = useContent();
+  if (deckId === undefined) {
+    return <SessionView title={STUDY.allTitle} backLabel={STUDY.backHome} emptyBody={STUDY.allEmptyBody} />;
+  }
   const deck = state.decks.find((d) => d.id === deckId);
-  if (!deck) return null; // 없는 덱 경로는 App이 목록으로 바꾼다
-  return <SessionView deckId={deckId} deckName={deck.name} />;
+  if (!deck) return null; // 없는 덱 경로는 App이 홈으로 바꾼다
+  return <SessionView deckId={deckId} title={deck.name} backLabel={STUDY.backToDeck} emptyBody={STUDY.emptyBody} />;
 }
 
-function SessionView({ deckId, deckName }: { deckId: string; deckName: string }) {
+interface SessionViewProps {
+  deckId?: string;
+  title: string;
+  backLabel: string; // 세션을 연 화면으로 돌아가는 버튼 문구
+  emptyBody: string;
+}
+
+function SessionView({ deckId, title, backLabel, emptyBody }: SessionViewProps) {
   const { state, dispatch } = useContent();
   const { back, setLeaveGuard } = useRoute();
-  // 마운트 때 날짜·큐를 한 번 정한다. 세션 중 콘텐츠가 바뀌어도 큐를 다시 만들지 않는다
-  const [session, setSession] = useState<SessionState>(() => {
+  // 마운트 때 날짜·큐와 상한 때문에 빠진 수를 한 번 정한다. 세션 중 콘텐츠가 바뀌어도 큐를 다시 만들지 않는다
+  const [initial] = useState(() => {
     const today = todayLocal();
-    return startSession(buildQueue(state, today, { deckId }).cards, today);
+    const queue = buildQueue(state, today, { deckId });
+    return { session: startSession(queue.cards, today), overflow: queue.overflow };
   });
+  const [session, setSession] = useState<SessionState>(initial.session);
   const [confirmQuit, setConfirmQuit] = useState(false);
   // 같은 프레임의 두 번째 탭은 이전 세션을 클로저로 보므로 상태가 아니라 ref로 막는다
   const lockedRef = useRef(false);
@@ -97,16 +110,16 @@ function SessionView({ deckId, deckName }: { deckId: string; deckName: string })
     return (
       <main className={s.screen}>
         <header className={s.header}>
-          <h1 className={s.title}>{deckName}</h1>
+          <h1 className={s.title}>{title}</h1>
         </header>
         <section className={s.empty}>
           <p className={s.emptyTitle}>{STUDY.emptyTitle}</p>
-          <p className={s.emptyBody}>{STUDY.emptyBody}</p>
+          <p className={s.emptyBody}>{emptyBody}</p>
         </section>
         <div className={ui.bottomSpacer} />
         <div className={ui.bottomBar}>
           <button type="button" className={ui.primary} onClick={leave}>
-            {STUDY.backToDeck}
+            {backLabel}
           </button>
         </div>
       </main>
@@ -121,7 +134,7 @@ function SessionView({ deckId, deckName }: { deckId: string; deckName: string })
           <h1 ref={doneTitleRef} className={s.title} tabIndex={-1}>
             {STUDY.doneTitle}
           </h1>
-          <p className={s.meta}>{deckName}</p>
+          <p className={s.meta}>{title}</p>
         </header>
         <dl className={styles.summary}>
           <div className={styles.stat}>
@@ -137,10 +150,11 @@ function SessionView({ deckId, deckName }: { deckId: string; deckName: string })
             <dd>{summary.dueTomorrow}장</dd>
           </div>
         </dl>
+        {initial.overflow > 0 && <p className={s.meta}>{overflowNotice(initial.overflow)}</p>}
         <div className={ui.bottomSpacer} />
         <div className={ui.bottomBar}>
           <button type="button" className={ui.primary} onClick={leave}>
-            {STUDY.backToDeck}
+            {backLabel}
           </button>
         </div>
       </main>
@@ -154,7 +168,7 @@ function SessionView({ deckId, deckName }: { deckId: string; deckName: string })
   return (
     <main className={s.screen}>
       <header className={s.header}>
-        <h1 className={s.title}>{deckName}</h1>
+        <h1 className={s.title}>{title}</h1>
         <p className={s.meta} aria-label={progressLabel(current, total)}>
           {current} / {total}
         </p>

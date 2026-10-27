@@ -14,7 +14,7 @@ export function CardEditor({ deckId, cardId }: { deckId: string; cardId?: string
   const { state } = useContent();
   const deck = state.decks.find((d) => d.id === deckId);
   const card = cardId ? state.cards[deckId]?.find((c) => c.id === cardId) : undefined;
-  if (!deck || (cardId && !card)) return null; // 없는 대상 경로는 App이 목록으로 바꾼다
+  if (!deck || (cardId && !card)) return null; // 없는 대상 경로는 App이 홈으로 바꾼다
 
   // 편집 대상이 바뀌면 입력 상태를 새로 시작한다
   return <CardForm key={cardId ?? 'new'} deckId={deckId} deckName={deck.name} cardId={cardId} initial={card} />;

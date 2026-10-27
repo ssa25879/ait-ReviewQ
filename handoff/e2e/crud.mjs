@@ -132,10 +132,10 @@ const audits = {};
 async function audit(name) { audits[name] = await t(`return __t.audit()`); }
 
 try {
-  await load(APP);
+  await send('Page.navigate', { url: 'about:blank' }); await sleep(200); await load(APP + '#/subjects'); // day4: 최초 화면은 홈, 목록은 #/subjects
 
   // 3.1 과목·덱 목록
-  check('최초 화면은 과목·덱 목록', (await t(`return __t.h1()`)) === '과목·덱');
+  check('#/subjects는 과목·덱 목록',(await t(`return __t.h1()`)) === '과목·덱');
   check('빈 상태 안내', (await t(`return __t.text()`)).includes('아직 과목이 없어요'));
   await audit('목록(빈 상태)');
 
@@ -225,9 +225,10 @@ try {
   await t(`history.back()`); await sleep(300);
   check('새로고침 후 뒤로가기 → 목록', (await t(`return __t.h1()`)) === '과목·덱');
 
-  // 없는 덱 주소 → 목록
+  // 없는 덱 주소 → 홈(day4)
   await t(`location.hash = '#/deck/nope'`); await sleep(300);
-  check('없는 덱 주소 → 목록', (await t(`return __t.h1()`)) === '과목·덱' && (await t(`return location.hash`)) === '#/');
+  check('없는 덱 주소 → 홈', (await t(`return __t.h1()`)) === '오늘 복습' && (await t(`return location.hash`)) === '#/');
+  await t(`location.hash = '#/subjects'`); await sleep(300);
 
   // 과목 연쇄 삭제
   await t(`__t.clickLabel('토익 과목 더보기')`); await settle();
@@ -248,7 +249,7 @@ try {
   await sleep(200);
   await t(`localStorage.length`).catch(() => {});
   // 덱 하나 만들어 id 확보 후 해당 주소로 새 진입
-  await load(APP);
+  await load(APP + '#/subjects');
   await t(`__t.click('+ 덱 추가', 0)`); await settle();
   await t(`__t.fillDialog('숙어'); __t.click('만들기')`); await settle();
   await t(`__t.clickRow('숙어')`); await settle();
@@ -263,6 +264,8 @@ try {
   check('바로 진입 후 뒤로가기 → 덱 상세', (await t(`return __t.h1()`)) === '숙어');
   await t(`history.back()`); await sleep(300);
   check('한 번 더 뒤로가기 → 목록', (await t(`return __t.h1()`)) === '과목·덱');
+  await t(`history.back()`); await sleep(300);
+  check('목록에서 뒤로가기 → 홈(day4)', (await t(`return __t.h1()`)) === '오늘 복습');
 
   for (const [name, a] of Object.entries(audits)) {
     check(`글자 13px 이상: ${name}`, a.minFont >= 13, `최소 ${a.minFont}px("${a.minAt}")`);
