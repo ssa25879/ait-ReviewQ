@@ -318,7 +318,7 @@ try {
   await evaluate(`localStorage.setItem('__ait_storage:bq:meta', JSON.stringify({ ...JSON.parse(__ls('bq:meta')), lastOpenedDate: '${m1}' }))`);
   await fresh(APP);
   const m2nd = await meta();
-  check('정상 진행 → lastOpenedDate 오늘로 갱신·installId 유지', m2nd.lastOpenedDate === today && m2nd.installId === installId && m2nd.schemaVersion === 1, JSON.stringify(m2nd));
+  check('정상 진행 → lastOpenedDate 오늘로 갱신·installId 유지', m2nd.lastOpenedDate === today && m2nd.installId === installId && m2nd.schemaVersion === 2, JSON.stringify(m2nd));
   check('정상 진행 → 경고 없음', !(await text()).includes('기기 날짜'));
 
   // ── 포그라운드 복귀 시 재계산

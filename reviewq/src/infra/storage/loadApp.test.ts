@@ -22,7 +22,7 @@ function counting(storage: StorageAdapter) {
 describe('loadApp', () => {
   it('첫 실행은 Meta를 만들고 빈 콘텐츠로 정상 로드한다', async () => {
     const result = await loadApp({ storage: createMemoryStorage(), today, newId });
-    expect(result).toMatchObject({ kind: 'ok', meta, content: { subjects: [], decks: [] } });
+    expect(result).toMatchObject({ kind: 'ok', meta: { ...meta, schemaVersion: 2 }, content: { subjects: [], decks: [] } });
   });
 
   it('Meta가 손상되면 콘텐츠가 정상이어도 손상이고 저장소에 쓰지 않는다', async () => {
@@ -53,6 +53,34 @@ describe('loadApp', () => {
       meta,
     });
     expect(writes).toEqual([]);
+  });
+
+  it('v1 Meta는 v2로 올려 Meta만 저장하고 콘텐츠는 그대로다 (D-05)', async () => {
+    const storage = createMemoryStorage();
+    const subjects = [{ id: 's1', name: '영어', createdAt: today, updatedAt: today }];
+    await storage.setItems({ [META_KEY]: JSON.stringify(meta), 'bq:subjects': JSON.stringify(subjects) });
+    const { spy, writes } = counting(storage);
+
+    const result = await loadApp({ storage: spy, today, newId });
+    expect(result).toMatchObject({ kind: 'ok', meta: { schemaVersion: 2, installId: 'install-1' }, content: { subjects } });
+    expect(result.kind === 'ok' && result.meta.notification).toBeUndefined();
+    expect(writes).toEqual([META_KEY]);
+    expect(JSON.parse((await storage.getItems([META_KEY]))[META_KEY]!)).toEqual({ ...meta, schemaVersion: 2 });
+  });
+
+  it('v2 Meta는 다시 저장하지 않는다', async () => {
+    const storage = createMemoryStorage();
+    await storage.setItems({ [META_KEY]: JSON.stringify({ ...meta, schemaVersion: 2 }) });
+    const { spy, writes } = counting(storage);
+    expect((await loadApp({ storage: spy, today, newId })).kind).toBe('ok');
+    expect(writes).toEqual([]);
+  });
+
+  it('알림 기록 형식이 틀린 Meta는 손상이다', async () => {
+    const storage = createMemoryStorage();
+    const raw = JSON.stringify({ ...meta, schemaVersion: 2, notification: { agreed: 'yes', lastAskedAt: today } });
+    await storage.setItems({ [META_KEY]: raw });
+    expect(await loadApp({ storage, today, newId })).toEqual({ kind: 'corrupt', corrupt: { [META_KEY]: raw }, meta: null });
   });
 
   it('저장소 읽기가 실패하면 readFailed', async () => {

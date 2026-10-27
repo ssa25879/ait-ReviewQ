@@ -62,8 +62,25 @@ export function isReviewLog(v: unknown): v is ReviewLog {
   );
 }
 
+function isConsent(v: unknown): boolean {
+  return (
+    isRecord(v) &&
+    typeof v.agreed === 'boolean' &&
+    isTimestamp(v.lastAskedAt) &&
+    (v.agreedAt === undefined || isTimestamp(v.agreedAt))
+  );
+}
+
+// v1·v2 모두 허용한다(버전 올림은 loadApp이 한다)
 export function isMeta(v: unknown): v is Meta {
-  return isRecord(v) && isCount(v.schemaVersion) && v.schemaVersion >= 1 && isDate(v.lastOpenedDate) && isId(v.installId);
+  return (
+    isRecord(v) &&
+    isCount(v.schemaVersion) &&
+    v.schemaVersion >= 1 &&
+    isDate(v.lastOpenedDate) &&
+    isId(v.installId) &&
+    (v.notification === undefined || isConsent(v.notification))
+  );
 }
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false };
