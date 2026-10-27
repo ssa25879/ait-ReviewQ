@@ -1,23 +1,23 @@
 import { useContent } from '../../app/contentContext';
 import { useRoute } from '../../app/routeContext';
+import { useToday } from '../../app/todayContext';
 import { ChevronRight } from '../../components/icons';
 import ui from '../../components/ui.module.css';
 import { buildQueue } from '../../domain/queue';
 import { formatDueDate } from '../../domain/selectors';
-import { todayLocal } from '../../utils/date';
-import { STUDY, dueTodayLabel } from '../messages';
+import { STUDY, dueTodayLabel, overflowNotice } from '../messages';
 import s from '../screen.module.css';
 import styles from './DeckDetail.module.css';
 
 export function DeckDetail({ deckId }: { deckId: string }) {
   const { state } = useContent();
   const { navigate } = useRoute();
+  const { today } = useToday();
   const deck = state.decks.find((d) => d.id === deckId);
-  if (!deck) return null; // 없는 덱 경로는 App이 목록으로 바꾼다
+  if (!deck) return null; // 없는 덱 경로는 App이 홈으로 바꾼다
 
   const subject = state.subjects.find((x) => x.id === deck.subjectId);
   const cards = state.cards[deckId] ?? [];
-  const today = todayLocal();
   const queue = buildQueue(state, today, { deckId });
   const dueCount = queue.cards.length + queue.overflow;
 
@@ -29,6 +29,7 @@ export function DeckDetail({ deckId }: { deckId: string }) {
           {subject?.name} · 카드 {cards.length}장
         </p>
         {cards.length > 0 && <p className={styles.due}>{dueTodayLabel(dueCount)}</p>}
+        {queue.overflow > 0 && <p className={s.meta}>{overflowNotice(queue.overflow)}</p>}
       </header>
 
       {cards.length === 0 ? (

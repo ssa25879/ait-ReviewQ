@@ -1,3 +1,4 @@
+import { DAILY_LIMIT } from '../domain/queue';
 import { CARD_TEXT_MAX, NAME_MAX, type ValidationResult } from '../domain/validation';
 
 export type Field = 'subjectName' | 'deckName' | 'question' | 'answer';
@@ -45,6 +46,9 @@ export const STUDY = {
   forget: '기억 못 함',
   remember: '기억함',
   backToDeck: '덱으로 돌아가기',
+  backHome: '홈으로',
+  allTitle: '오늘 복습',
+  allEmptyBody: '다음 복습일이 되면 홈에서 다시 학습할 수 있어요.',
   emptyTitle: '오늘 복습할 카드가 없어요',
   emptyBody: '다음 복습일이 되면 이 덱에서 다시 학습할 수 있어요.',
   doneTitle: '오늘 학습을 마쳤어요',
@@ -62,3 +66,27 @@ export function progressLabel(current: number, total: number): string {
 export function rememberedPercent(remembered: number, completed: number): number {
   return completed === 0 ? 0 : Math.round((remembered / completed) * 100);
 }
+
+// 하루 상한 때문에 빠진 카드 안내. 홈·덱 상세·학습 완료 화면이 같이 쓴다
+export function overflowNotice(rest: number): string {
+  return `오늘은 ${DAILY_LIMIT}장까지 학습해요. 나머지 ${rest}장은 내일 이어서 나와요.`;
+}
+
+// 기기 시계 되돌림 경고. lastOpenedDate는 'YYYY-MM-DD'
+export function clockWarning(lastOpenedDate: string): string {
+  const [, m, d] = lastOpenedDate.split('-').map(Number);
+  return `기기 날짜가 마지막으로 앱을 연 날(${m}월 ${d}일)보다 이전이에요. 날짜 설정을 확인해 주세요.`;
+}
+
+export const HOME = {
+  title: '오늘 복습',
+  overdue: (n: number) => `연체 ${n}장`,
+  noneTitle: '오늘 복습할 카드가 없어요',
+  noneBody: '다음 복습일이 되면 여기에 다시 나와요.',
+  firstTitle: '복습큐를 시작해 볼까요?',
+  firstBody: '과목과 덱을 만들고 카드를 추가하면 복습할 날에 맞춰 여기에 모아 보여 줘요.',
+  subjectsTitle: '과목별',
+  start: '학습 시작',
+  manage: '과목·덱 관리',
+  create: '과목·덱 만들기',
+};

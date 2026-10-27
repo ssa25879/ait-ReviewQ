@@ -4,6 +4,7 @@ import { useRoute } from "./app/routeContext";
 import { routeTargetExists } from "./app/router";
 import { CardEditor } from "./screens/CardEditor/CardEditor";
 import { DeckDetail } from "./screens/DeckDetail/DeckDetail";
+import { Home } from "./screens/Home/Home";
 import { StudySession } from "./screens/Study/StudySession";
 import { SubjectList } from "./screens/SubjectList/SubjectList";
 import s from "./screens/screen.module.css";
@@ -18,9 +19,9 @@ function App() {
   });
 
   // 경로가 바뀌거나 로드가 끝났을 때만 확인한다(상태는 ref로 읽는다). 편집 화면에서 카드를 지운 직후
-  // (뒤로가기 처리 전)에는 대상이 잠깐 없어지는데, 이때 목록으로 바꾸면 히스토리가 꼬인다
+  // (뒤로가기 처리 전)에는 대상이 잠깐 없어지는데, 이때 홈으로 바꾸면 히스토리가 꼬인다
   useEffect(() => {
-    if (status === "ready" && !routeTargetExists(stateRef.current, route)) replace({ name: "subjects" });
+    if (status === "ready" && !routeTargetExists(stateRef.current, route)) replace({ name: "home" });
   }, [status, route, replace]);
 
   if (status === "loading") return <p className={s.notice}>불러오는 중이에요</p>;
@@ -36,6 +37,8 @@ function App() {
   }
 
   switch (route.name) {
+    case "home":
+      return <Home />;
     case "subjects":
       return <SubjectList />;
     case "deck":
@@ -46,6 +49,8 @@ function App() {
       return <CardEditor deckId={route.deckId} cardId={route.cardId} />;
     case "study":
       return <StudySession key={route.deckId} deckId={route.deckId} />;
+    case "studyAll":
+      return <StudySession key="all" />;
   }
 }
 

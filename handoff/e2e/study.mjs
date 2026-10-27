@@ -177,7 +177,7 @@ const lastSwipe = async () => { await sleep(100); return swipeLog.at(-1); };
 const activeIs = (expr) => evaluate(`document.activeElement === (${expr})`);
 const fresh = async (url) => { await send('Page.navigate', { url: 'about:blank' }); await sleep(200); await load(url); };
 try {
-  await load(APP);
+  await send('Page.navigate', { url: 'about:blank' }); await sleep(200); await load(APP + '#/subjects'); // day4: 최초 화면은 홈, 목록은 #/subjects
   await hook();
   const today = await t(`return (await __mods()).date.todayLocal()`);
   const tomorrow = await t(`return (await __mods()).date.addDays('${today}', 1)`);
@@ -326,7 +326,7 @@ try {
   check('그만하기 후 backEvent 구독 해제', (await evaluate(`globalThis.__aitDevtoolsBackSubscribers__ ?? 0`)) === 0);
   check('덱 상세: 남은 오늘 복습 1장(g3)', (await t(`return __t.text()`)).includes('오늘 복습 1장'));
   await evaluate(`history.back()`); await sleep(300);
-  check('이어서 뒤로가기 → 목록', (await hash()) === '#/' && !(await dialogShown()), await hash());
+  check('이어서 뒤로가기 → 목록', (await hash()) === '#/subjects' &&!(await dialogShown()), await hash());
 
   for (const [name, a] of Object.entries(audits)) {
     check(`글자 13px 이상: ${name}`, a.minFont >= 13, `최소 ${a.minFont}px("${a.minAt}")`);

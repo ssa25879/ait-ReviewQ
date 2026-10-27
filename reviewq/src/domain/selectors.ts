@@ -1,3 +1,4 @@
+import { isDue } from '../utils/date';
 import type { ContentState } from './content';
 import type { Deck } from './model';
 
@@ -32,4 +33,19 @@ export function formatDueDate(dueDate: string, today: string): string {
   if (dueDate === today) return '오늘';
   const [, m, d] = dueDate.split('-').map(Number);
   return `${m}월 ${d}일`;
+}
+
+// 연체 수: 다음 복습일이 오늘보다 이전인 카드 수(전체 덱)
+export function overdueCount(state: ContentState, today: string): number {
+  return Object.values(state.cards).reduce((n, cards) => n + cards.filter((c) => c.schedule.dueDate < today).length, 0);
+}
+
+// 과목별 오늘 복습 수(상한 무관). 덱별 buildQueue의 cards + overflow 합과 같다
+export function dueCountBySubject(state: ContentState, today: string): Record<string, number> {
+  const counts: Record<string, number> = Object.fromEntries(state.subjects.map((s) => [s.id, 0]));
+  for (const deck of state.decks) {
+    const due = (state.cards[deck.id] ?? []).filter((c) => isDue(c.schedule.dueDate, today)).length;
+    counts[deck.subjectId] = (counts[deck.subjectId] ?? 0) + due;
+  }
+  return counts;
 }

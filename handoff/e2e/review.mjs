@@ -158,7 +158,7 @@ const hook = () => evaluate(APP_HOOK);
 const countable = () => results.filter((r) => !r.startsWith('INFO'));
 
 try {
-  await load(APP);
+  await send('Page.navigate', { url: 'about:blank' }); await sleep(200); await load(APP + '#/subjects'); // day4: 최초 화면은 홈, 목록은 #/subjects
   await hook();
   const today = await t(`return (await __mods()).date.todayLocal()`);
   const tomorrow = await t(`return (await __mods()).date.addDays('${today}', 1)`);

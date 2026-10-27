@@ -1,0 +1,68 @@
+/* 오늘 복습 수 요약 카드 */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-5);
+  border-radius: 16px;
+  background: var(--color-bg-canvas);
+}
+
+.count {
+  margin: 0;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-display);
+  color: var(--color-text-strong);
+}
+
+.overdue {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.notice {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-subtle);
+}
+
+/* 시계 되돌림 경고 — 화면 안 안내 카드(대화상자 아님) */
+.warning {
+  margin: 0;
+  padding: var(--space-4);
+  border-left: 4px solid var(--color-warning);
+  border-radius: 12px;
+  background: var(--color-bg-canvas);
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-default);
+}
+
+.sectionTitle {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-subtitle);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--color-text-strong);
+}
+
+.subjectItem + .subjectItem {
+  border-top: 1px solid var(--color-bg-canvas);
+}
+
+.subjectCount {
+  flex: none;
+  font-size: var(--font-size-body-small);
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+/* 하단 버튼 두 개(보조·주) */
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.actions > * {
+  flex: 1;
+}
