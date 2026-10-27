@@ -1,4 +1,5 @@
 import { DAILY_LIMIT } from '../domain/queue';
+import { INTERVALS } from '../domain/scheduler/fixedInterval';
 import { CARD_TEXT_MAX, NAME_MAX, type ValidationResult } from '../domain/validation';
 
 export type Field = 'subjectName' | 'deckName' | 'question' | 'answer';
@@ -90,3 +91,19 @@ export const HOME = {
   manage: '과목·덱 관리',
   create: '과목·덱 만들기',
 };
+
+export const STATS = {
+  title: '통계',
+  todayDone: '오늘 완료',
+  totalCards: '전체 카드',
+  stagesTitle: '단계별 카드',
+  recentTitle: '최근 7일 학습',
+  emptyTitle: '아직 통계가 없어요',
+  emptyBody: '카드를 만들고 학습하면 여기에 통계가 쌓여요.',
+  entry: '통계',
+};
+
+// 단계 라벨: 0은 새 카드·다시 학습, 1~6은 간격 일수
+export function stageLabel(stage: number): string {
+  return stage === 0 ? '새 카드·다시 학습' : `${INTERVALS[stage - 1]}일 간격`;
+}

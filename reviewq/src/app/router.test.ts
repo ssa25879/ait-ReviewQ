@@ -7,6 +7,7 @@ describe('parseRoute / formatRoute', () => {
     { name: 'home' },
     { name: 'subjects' },
     { name: 'studyAll' },
+    { name: 'stats' },
     { name: 'deck', deckId: 'd1' },
     { name: 'cardNew', deckId: 'd1' },
     { name: 'cardEdit', deckId: 'd1', cardId: 'c1' },
@@ -21,12 +22,13 @@ describe('parseRoute / formatRoute', () => {
     expect(formatRoute({ name: 'home' })).toBe('#/');
     expect(formatRoute({ name: 'subjects' })).toBe('#/subjects');
     expect(formatRoute({ name: 'studyAll' })).toBe('#/study');
+    expect(formatRoute({ name: 'stats' })).toBe('#/stats');
     expect(formatRoute({ name: 'cardEdit', deckId: 'd1', cardId: 'c1' })).toBe('#/deck/d1/card/c1');
     expect(formatRoute({ name: 'study', deckId: 'd1' })).toBe('#/deck/d1/study');
   });
 
   it.each([
-    '', '#', '#/', '#/unknown', '#/subjects/x', '#/study/x', '#/deck', '#/deck/d1/x', '#/deck/d1/card', '#/deck/d1/studyx', '#/deck/d1/study/x',
+    '', '#', '#/', '#/unknown', '#/subjects/x', '#/study/x', '#/statsx', '#/stats/x', '#/deck', '#/deck/d1/x', '#/deck/d1/card', '#/deck/d1/studyx', '#/deck/d1/study/x',
   ])('알 수 없는 해시 %j는 홈', (hash) => {
     expect(parseRoute(hash)).toEqual({ name: 'home' });
   });
@@ -37,9 +39,10 @@ describe('seedRoutes', () => {
     expect(seedRoutes({ name: 'home' })).toEqual([]);
   });
 
-  it('과목·덱 목록과 전체 덱 세션은 홈을 채운다', () => {
+  it('과목·덱 목록·전체 덱 세션·통계는 홈을 채운다', () => {
     expect(seedRoutes({ name: 'subjects' })).toEqual([{ name: 'home' }]);
     expect(seedRoutes({ name: 'studyAll' })).toEqual([{ name: 'home' }]);
+    expect(seedRoutes({ name: 'stats' })).toEqual([{ name: 'home' }]);
   });
 
   it('덱 상세로 시작하면 홈·목록을 채운다', () => {
@@ -79,6 +82,7 @@ describe('routeTargetExists', () => {
     expect(routeTargetExists(state, { name: 'home' })).toBe(true);
     expect(routeTargetExists(state, { name: 'subjects' })).toBe(true);
     expect(routeTargetExists(state, { name: 'studyAll' })).toBe(true);
+    expect(routeTargetExists(state, { name: 'stats' })).toBe(true);
     expect(routeTargetExists(state, { name: 'deck', deckId: 'd1' })).toBe(true);
     expect(routeTargetExists(state, { name: 'deck', deckId: 'nope' })).toBe(false);
     expect(routeTargetExists(state, { name: 'cardNew', deckId: 'd2' })).toBe(true);

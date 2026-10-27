@@ -8,6 +8,7 @@ import {
   overflowNotice,
   progressLabel,
   rememberedPercent,
+  stageLabel,
   validationMessage,
 } from './messages';
 
@@ -39,5 +40,11 @@ describe('홈·상한 문구', () => {
   it('상한 초과 안내와 시계 경고', () => {
     expect(overflowNotice(30)).toBe('오늘은 100장까지 학습해요. 나머지 30장은 내일 이어서 나와요.');
     expect(clockWarning('2026-10-26')).toBe('기기 날짜가 마지막으로 앱을 연 날(10월 26일)보다 이전이에요. 날짜 설정을 확인해 주세요.');
+  });
+});
+
+describe('통계 문구', () => {
+  it('단계 라벨', () => {
+    expect([0, 1, 3, 6].map(stageLabel)).toEqual(['새 카드·다시 학습', '1일 간격', '7일 간격', '60일 간격']);
   });
 });

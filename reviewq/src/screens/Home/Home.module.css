@@ -66,3 +66,8 @@
 .actions > * {
   flex: 1;
 }
+
+/* 통계 진입 행 — 과목별 요약과 구분선 */
+.statsRow {
+  border-top: 1px solid var(--color-bg-canvas);
+}
