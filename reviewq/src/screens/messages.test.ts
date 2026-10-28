@@ -9,6 +9,7 @@ import {
   dueTodayLabel,
   overflowNotice,
   progressLabel,
+  progressText,
   rememberedPercent,
   stageLabel,
   validationMessage,
@@ -34,7 +35,16 @@ describe('messages', () => {
     expect(rememberedPercent(1, 2)).toBe(50);
     expect(rememberedPercent(2, 3)).toBe(67);
     expect(rememberedPercent(0, 0)).toBe(0);
-    expect(progressLabel(1, 3)).toBe('3장 중 1번째');
+    expect(progressLabel({ phase: 'first', current: 1, total: 3, pendingRetry: 0 })).toBe('3장 중 1번째');
+  });
+
+  it('학습 진행 표시: 첫 회차·다시 볼 카드·다시 보기 구간', () => {
+    const first = { phase: 'first', current: 3, total: 13, pendingRetry: 2 } as const;
+    expect(progressText(first)).toBe('3 / 13');
+    expect(progressLabel(first)).toBe('13장 중 3번째, 다시 볼 카드 2장');
+    const retry = { phase: 'retry', current: 1, total: 3, pendingRetry: 3 } as const;
+    expect(progressText(retry)).toBe('다시 보기 1 / 3');
+    expect(progressLabel(retry)).toBe('다시 보기 3장 중 1번째');
   });
 });
 

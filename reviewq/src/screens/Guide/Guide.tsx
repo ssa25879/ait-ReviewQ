@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { graniteEvent, setIosSwipeGestureEnabled } from '@apps-in-toss/web-framework';
+import { useEffect, useRef, useState } from 'react';
 import { useContent } from '../../app/contentContext';
 import { useRoute } from '../../app/routeContext';
 import { sampleDeckActions } from '../../app/sampleDeck';
@@ -19,6 +20,23 @@ export function Guide() {
   const total = GUIDE.pages.length;
   const last = page === total - 1;
   const hasCards = Object.values(state.cards).some((cards) => cards.length > 0);
+
+  // 가이드는 사용자 조작 없이 히스토리에 쌓여 WebView가 기기 뒤로가기에서 건너뛸 수 있다. 가이드 동안 backEvent를
+  // 직접 받아 연 화면으로 돌아가고(본 기록은 남기지 않음), backEvent로 오지 않는 iOS 스와이프는 끈다
+  useEffect(() => {
+    const unsubscribe = graniteEvent.addEventListener('backEvent', {
+      onEvent: () => {
+        if (doneRef.current) return;
+        doneRef.current = true;
+        back();
+      },
+    });
+    setIosSwipeGestureEnabled({ isEnabled: false }).catch(() => {});
+    return () => {
+      unsubscribe();
+      setIosSwipeGestureEnabled({ isEnabled: true }).catch(() => {});
+    };
+  }, [back]);
 
   // 끝내기 동작은 한 번만 실행한다(연타·중복 이동 방지)
   const finish = (then: () => void) => {

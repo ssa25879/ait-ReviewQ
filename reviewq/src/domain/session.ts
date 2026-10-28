@@ -7,6 +7,7 @@ import type { Grade } from './scheduler/types';
 export interface SessionState {
   date: string; // 세션 시작 날짜. 자정이 지나도 바꾸지 않는다
   order: QueueItem[]; // 기억 못 한 카드의 재출제 포함
+  initialCount: number; // 세션 시작 카드 수(재출제 제외)
   index: number;
   flipped: boolean;
   firstGrades: Record<string, Grade>; // cardId → 세션 첫 판정
@@ -19,7 +20,7 @@ export interface ReviewApply extends QueueItem {
 }
 
 export function startSession(queue: QueueItem[], date: string): SessionState {
-  return { date, order: [...queue], index: 0, flipped: false, firstGrades: {} };
+  return { date, order: [...queue], initialCount: queue.length, index: 0, flipped: false, firstGrades: {} };
 }
 
 export function isFinished(session: SessionState): boolean {
@@ -49,15 +50,27 @@ export function judge(session: SessionState, grade: Grade): { session: SessionSt
   return { session: next, apply: { ...item, grade, date: session.date } };
 }
 
-// 현재 몇 번째 카드인지와 전체 수(재출제 포함)
-export function progress(session: SessionState): { current: number; total: number } {
-  const total = session.order.length;
-  return { current: Math.min(session.index + 1, total), total };
+export interface SessionProgress {
+  phase: 'first' | 'retry'; // 첫 회차 또는 재출제 카드를 보는 다시 보기 구간
+  current: number;
+  total: number; // 첫 회차는 시작 카드 수로 고정, 다시 보기는 재출제 카드 수
+  pendingRetry: number; // 지금까지 기억 못 함으로 판정한 카드 수(다시 볼 카드)
+}
+
+// 끝난 세션은 마지막 구간 값으로 고정한다. 재출제는 첫 판정에서만 생겨 다시 보기 구간의 수는 더 늘지 않는다
+export function progress(session: SessionState): SessionProgress {
+  const { initialCount, index } = session;
+  const pendingRetry = session.order.length - initialCount;
+  if (index < initialCount || pendingRetry === 0) {
+    return { phase: 'first', current: Math.min(index + 1, initialCount), total: initialCount, pendingRetry };
+  }
+  return { phase: 'retry', current: Math.min(index - initialCount + 1, pendingRetry), total: pendingRetry, pendingRetry };
 }
 
 export interface SessionSummary {
   completed: number; // 일정에 반영된 판정 수
   remembered: number;
+  retried: number; // 첫 판정이 기억 못 함이라 재출제된 카드 수
   dueTomorrow: number; // 세션 날짜 다음 날이 예정일인 카드 수(전체 덱)
 }
 
@@ -67,6 +80,7 @@ export function summarize(session: SessionState, state: ContentState): SessionSu
   return {
     completed: grades.length,
     remembered: grades.filter((g) => g === 'remember').length,
+    retried: grades.filter((g) => g === 'forget').length,
     dueTomorrow: Object.values(state.cards)
       .flat()
       .filter((c) => c.schedule.dueDate === tomorrow).length,

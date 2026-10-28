@@ -62,6 +62,11 @@
   margin: 0;
 }
 
+/* 다시 본 카드 항목까지 4칸이면 좁은 화면에서 줄바꿈되지 않게 2×2로 둔다 */
+.summaryFour {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .stat {
   display: flex;
   flex-direction: column;

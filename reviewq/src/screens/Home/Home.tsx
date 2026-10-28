@@ -7,7 +7,7 @@ import { useToday } from '../../app/todayContext';
 import { BookIcon, ChartIcon, ChevronRight, GearIcon } from '../../components/icons';
 import ui from '../../components/ui.module.css';
 import { buildQueue } from '../../domain/queue';
-import { dueCountBySubject, overdueCount } from '../../domain/selectors';
+import { cardCountBySubject, dueCountBySubject, overdueCount } from '../../domain/selectors';
 import { HOME, SETTINGS, STATS, clockWarning, homeDate, overflowNotice } from '../messages';
 import s from '../screen.module.css';
 import styles from './Home.module.css';
@@ -23,6 +23,7 @@ export function Home() {
   const dueCount = queue.cards.length + queue.overflow;
   const overdue = overdueCount(state, today);
   const bySubject = dueCountBySubject(state, today);
+  const cardsBySubject = cardCountBySubject(state);
   const goSubjects = () => navigate({ name: 'subjects' });
   // 카드가 생기면 첫 사용 상태가 끝나 버튼이 사라진다. 그 전 연타는 ref로 막는다
   const sampleRef = useRef(false);
@@ -94,8 +95,9 @@ export function Home() {
                 <button type="button" className={s.row} onClick={goSubjects}>
                   <span className={s.rowMain}>
                     <span className={s.rowTitle}>{subject.name}</span>
+                    <span className={s.rowSub}>전체 {cardsBySubject[subject.id] ?? 0}장</span>
                   </span>
-                  <span className={styles.subjectCount}>{bySubject[subject.id] ?? 0}장</span>
+                  <span className={styles.subjectCount}>오늘 {bySubject[subject.id] ?? 0}장</span>
                   <span className={s.rowChevron}>
                     <ChevronRight />
                   </span>

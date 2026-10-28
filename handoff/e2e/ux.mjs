@@ -169,6 +169,9 @@ const progress = () => t(`return [...document.querySelectorAll('span')].map((s) 
 const clearAll = () => evaluate(`localStorage.clear()`); // 가이드 본 기록까지 지운다(처음 실행 상태)
 const noDeck = async (where) => check(`화면에 "덱" 없음: ${where}`, !(await text()).includes('덱'), (await text()).match(/.{0,10}덱.{0,10}/)?.[0] ?? '');
 const backTo = async () => { await evaluate(`history.back()`); await sleep(400); };
+// devtools 모의 SDK의 기기 뒤로가기 이벤트와 구독 수
+const backEvent = async () => { await evaluate(`window.dispatchEvent(new CustomEvent('__ait:backEvent'))`); await sleep(400); };
+const backSubs = () => evaluate(`globalThis.__aitDevtoolsBackSubscribers__ ?? null`);
 
 try {
   // ── 처음 실행: 가이드
@@ -212,6 +215,13 @@ try {
   await click('과목 관리'); await backTo();
   check('같은 실행 중 화면 이동 후에도 가이드 다시 안 열림', (await hash()) === '#/');
 
+  // ── 가이드에서 기기 뒤로가기(backEvent)
+  await clearAll(); await fresh(APP);
+  check('가이드 중 backEvent 구독 1개', (await backSubs()) === 1, String(await backSubs()));
+  await backEvent();
+  check('처음 실행 가이드 backEvent → 홈·본 기록 없음', (await hash()) === '#/' && (await h1()) === '오늘 복습' && (await ls('bq:guide')) === null, await hash());
+  check('가이드를 벗어나면 backEvent 구독 0', (await backSubs()) === 0, String(await backSubs()));
+
   // ── 카드가 이미 있으면 가이드 없음
   await t(`
     const { actions } = await __mods(); const { dispatch } = __app();
@@ -234,6 +244,8 @@ try {
   check('카드 있으면 마지막 장은 확인만', (await hasButton('확인')) && !(await hasButton('예시 카드로 시작')) && !(await hasButton('직접 만들기')));
   await click('확인');
   check('확인 → 설정으로', (await hash()) === '#/settings');
+  await click('사용 방법 보기'); await backEvent();
+  check('다시 보기 가이드 backEvent → 설정·구독 0', (await hash()) === '#/settings' && (await backSubs()) === 0, `${await hash()} ${await backSubs()}`);
   await backTo();
 
   // ── 홈 머리말·바로가기 타일

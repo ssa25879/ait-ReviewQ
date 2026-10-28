@@ -66,7 +66,33 @@ describe('세션 진행', () => {
 
   it('카드 3장 세션의 두 번째 카드에서 진행은 2/3이다', () => {
     const s = answer(startSession(queue, DATE), 'remember').session;
-    expect(progress(s)).toEqual({ current: 2, total: 3 });
+    expect(progress(s)).toEqual({ phase: 'first', current: 2, total: 3, pendingRetry: 0 });
+  });
+
+  it('첫 회차는 기억 못 함이 생겨도 전체 수가 시작 카드 수로 고정된다', () => {
+    const s = answer(startSession(queue, DATE), 'forget').session;
+    expect(s.initialCount).toBe(3);
+    expect(progress(s)).toEqual({ phase: 'first', current: 2, total: 3, pendingRetry: 1 });
+  });
+
+  it('첫 회차를 마치면 다시 보기 구간의 순번과 재출제 카드 수를 따로 센다', () => {
+    let s = startSession(queue, DATE);
+    for (const g of ['forget', 'remember', 'forget'] as Grade[]) s = answer(s, g).session;
+    expect(progress(s)).toEqual({ phase: 'retry', current: 1, total: 2, pendingRetry: 2 });
+    // 다시 보기에서 또 기억 못 함이어도 구간 수는 늘지 않는다
+    s = answer(s, 'forget').session;
+    expect(progress(s)).toEqual({ phase: 'retry', current: 2, total: 2, pendingRetry: 2 });
+  });
+
+  it('끝난 세션은 마지막 구간 값으로 고정된다', () => {
+    let s = startSession(queue, DATE);
+    for (const g of ['remember', 'remember', 'remember'] as Grade[]) s = answer(s, g).session;
+    expect(progress(s)).toEqual({ phase: 'first', current: 3, total: 3, pendingRetry: 0 });
+
+    let r = startSession(queue, DATE);
+    for (const g of ['forget', 'remember', 'remember', 'remember'] as Grade[]) r = answer(r, g).session;
+    expect(isFinished(r)).toBe(true);
+    expect(progress(r)).toEqual({ phase: 'retry', current: 1, total: 1, pendingRetry: 1 });
   });
 
   it('끝난 세션의 판정·뒤집기는 무시한다', () => {
@@ -86,7 +112,7 @@ describe('세션 진행', () => {
     expect(state.logs['2026-10'][0].date).toBe(DATE);
   });
 
-  it('요약은 반영된 판정 수·기억함 수·다음 날 예정 수를 알려 준다', () => {
+  it('요약은 반영된 판정 수·기억함 수·다시 본 카드 수·다음 날 예정 수를 알려 준다', () => {
     let state = seed(queue.map((q) => q.cardId));
 
     let s = startSession(queue, DATE);
@@ -101,6 +127,12 @@ describe('세션 진행', () => {
     }
     expect(isFinished(s)).toBe(true);
     // A·C는 stage 1(10-27), B는 기억 못 함(10-27)
-    expect(summarize(s, state)).toEqual({ completed: 3, remembered: 2, dueTomorrow: 3 });
+    expect(summarize(s, state)).toEqual({ completed: 3, remembered: 2, retried: 1, dueTomorrow: 3 });
+  });
+
+  it('모두 기억함이면 다시 본 카드는 0이다', () => {
+    let s = startSession(queue, DATE);
+    for (const g of ['remember', 'remember', 'remember'] as Grade[]) s = answer(s, g).session;
+    expect(summarize(s, seed([])).retried).toBe(0);
   });
 });

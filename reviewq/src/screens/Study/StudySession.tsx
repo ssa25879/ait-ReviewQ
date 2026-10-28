@@ -21,7 +21,7 @@ import {
   summarize,
 } from '../../domain/session';
 import { todayLocal } from '../../utils/date';
-import { STUDY, overflowNotice, progressLabel, rememberedPercent } from '../messages';
+import { STUDY, overflowNotice, pendingRetryText, progressLabel, progressText, rememberedPercent } from '../messages';
 import s from '../screen.module.css';
 import styles from './StudySession.module.css';
 
@@ -139,7 +139,7 @@ function SessionView({ deckId, title, backLabel, emptyBody }: SessionViewProps) 
           </h1>
           <p className={s.meta}>{title}</p>
         </header>
-        <dl className={styles.summary}>
+        <dl className={summary.retried > 0 ? `${styles.summary} ${styles.summaryFour}` : styles.summary}>
           <div className={styles.stat}>
             <dt>완료</dt>
             <dd>{summary.completed}장</dd>
@@ -148,6 +148,12 @@ function SessionView({ deckId, title, backLabel, emptyBody }: SessionViewProps) 
             <dt>기억함</dt>
             <dd>{rememberedPercent(summary.remembered, summary.completed)}%</dd>
           </div>
+          {summary.retried > 0 && (
+            <div className={styles.stat}>
+              <dt>다시 본 카드</dt>
+              <dd>{summary.retried}장</dd>
+            </div>
+          )}
           <div className={styles.stat}>
             <dt>내일 예정</dt>
             <dd>{summary.dueTomorrow}장</dd>
@@ -168,15 +174,20 @@ function SessionView({ deckId, title, backLabel, emptyBody }: SessionViewProps) 
 
   const item = currentItem(session);
   const card = item ? state.cards[item.deckId]?.find((c) => c.id === item.cardId) : undefined;
-  const { current, total } = progress(session);
+  const prog = progress(session);
 
   return (
     <main className={s.screen}>
       <header className={s.header}>
         <h1 className={s.title}>{title}</h1>
-        <p className={s.meta} aria-label={progressLabel(current, total)}>
-          {current} / {total}
+        <p className={s.meta} aria-label={progressLabel(prog)}>
+          {progressText(prog)}
         </p>
+        {prog.phase === 'first' && prog.pendingRetry > 0 && (
+          <p className={s.meta} aria-hidden="true">
+            {pendingRetryText(prog.pendingRetry)}
+          </p>
+        )}
       </header>
 
       <button

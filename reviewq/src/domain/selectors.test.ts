@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type ContentAction, contentReducer, emptyContent } from './content';
 import { buildQueue } from './queue';
-import { dueCountBySubject, formatDueDate, hasDuplicateDeckName, overdueCount, subjectDeleteSummary } from './selectors';
+import { cardCountBySubject, dueCountBySubject, formatDueDate, hasDuplicateDeckName, overdueCount, subjectDeleteSummary } from './selectors';
 import { countChars } from './validation';
 
 const T = '2026-10-26T00:00:00.000Z';
@@ -70,6 +70,11 @@ describe('홈 요약 selectors', () => {
       return q.cards.length + q.overflow;
     };
     expect(perDeck('d1') + perDeck('d2')).toBe(3);
+  });
+
+  it('과목별 전체 카드 수는 오늘 복습이 0인 과목도 센다', () => {
+    expect(cardCountBySubject(mixed)).toEqual({ en: 5, ma: 2 });
+    expect(cardCountBySubject(emptyContent)).toEqual({});
   });
 
   it('빈 상태면 0', () => {

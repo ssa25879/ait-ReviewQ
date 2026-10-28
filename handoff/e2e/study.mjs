@@ -229,11 +229,11 @@ try {
   check('판정 직후 저장소에 로그 (D-01)', d01 !== null, `${d01}ms`);
   await settle();
   await flipCard(); await t(`${judgeBtn('기억 못 함')}.click()`); await settle();
-  check('기억 못 함 → 진행 3 / 3', (await prog()) === '3 / 3', await prog());
+  check('기억 못 함 → 다시 보기 1 / 1', (await prog()) === '다시 보기 1 / 1', await prog());
   await flipCard(); await t(`${judgeBtn('기억함')}.click()`); await settle();
   const doneText = await t(`return __t.text()`);
   check('완료 화면 제목', (await t(`return __t.h1()`)) === '오늘 학습을 마쳤어요');
-  check('완료 2장·기억함 50%·내일 예정 2장', /완료\s*2장/.test(doneText) && /기억함\s*50%/.test(doneText) && /내일 예정\s*2장/.test(doneText), doneText.replace(/\n/g, ' '));
+  check('완료 2장·기억함 50%·다시 본 카드 1장·내일 예정 2장', /완료\s*2장/.test(doneText) && /기억함\s*50%/.test(doneText) && /내일 예정\s*2장/.test(doneText) && /다시 본 카드\s*1장/.test(doneText), doneText.replace(/\n/g, ' '));
   check('재출제 판정은 로그 추가 없음(2건)', (await logCount()) === 2);
   await audit('학습 완료');
   await shot('study-done');
@@ -289,10 +289,10 @@ try {
   await evaluate(`history.back()`); await sleep(300);
   check('완료 후 뒤로가기 → 확인 없이 단원 상세', !(await dialogShown()) && (await t(`return __t.h1()`)) === '단어', await hash());
 
-  // ── 진행 수(문법 3장): 첫 카드 기억 못 함 → 2 / 4
+  // ── 진행 수(문법 3장): 첫 카드 기억 못 함 → 2 / 3·다시 볼 카드 1장
   await fresh(`${deckUrl(ids['문법'])}/study`); await hook();
   await flipCard(); await t(`${judgeBtn('기억 못 함')}.click()`); await settle();
-  check('기억 못 함 후 진행 2 / 4', (await prog()) === '2 / 4', await prog());
+  check('기억 못 함 후 진행 2 / 3·다시 볼 카드 1장', (await prog()) === '2 / 3' && (await t(`return __t.text()`)).includes('다시 볼 카드 1장'), await prog());
   const logsBeforeBack = await logCount();
 
   // ── 4.1 뒤로가기 확인
@@ -305,15 +305,15 @@ try {
   await audit('그만하기 확인');
   await shot('study-quit-confirm');
   await t(`[...document.querySelectorAll('[role=dialog] button')].find((b) => b.textContent.trim() === '취소').click()`); await settle();
-  check('취소 → 같은 카드 정답 상태 유지', !(await dialogShown()) && (await flipped()) && (await prog()) === '2 / 4' && (await t(`return __t.text()`)).includes('g2의 정답'));
+  check('취소 → 같은 카드 정답 상태 유지', !(await dialogShown()) && (await flipped()) && (await prog()) === '2 / 3' && (await t(`return __t.text()`)).includes('g2의 정답'));
   await t(`${judgeBtn('기억함')}.click()`); await settle();
-  check('취소 후 판정 가능 → 3 / 4', (await prog()) === '3 / 4' && (await logCount()) === logsBeforeBack + 1);
+  check('취소 후 판정 가능 → 3 / 3', (await prog()) === '3 / 3' && (await logCount()) === logsBeforeBack + 1);
   await evaluate(`window.dispatchEvent(new CustomEvent('__ait:backEvent'))`); await settle();
   check('backEvent → 확인 표시·주소 study 유지', (await dialogShown()) && (await hash()) === `#/deck/${ids['문법']}/study`);
   const subs = await evaluate(`globalThis.__aitDevtoolsBackSubscribers__ ?? null`);
   check('세션 중 backEvent 구독 1개', subs === 1, String(subs));
   await evaluate(`window.dispatchEvent(new CustomEvent('__ait:backEvent'))`); await settle();
-  check('[수정5] 확인 열린 채 backEvent → 확인 닫힘', !(await dialogShown()) && (await prog()) === '3 / 4');
+  check('[수정5] 확인 열린 채 backEvent → 확인 닫힘', !(await dialogShown()) && (await prog()) === '3 / 3');
   await evaluate(`window.dispatchEvent(new CustomEvent('__ait:backEvent'))`); await settle();
   await evaluate(`history.back()`); await sleep(300);
   check('[수정5] 확인 열린 채 브라우저 뒤로가기 → 확인 닫힘·주소 유지', !(await dialogShown()) && (await hash()) === `#/deck/${ids['문법']}/study`, await hash());

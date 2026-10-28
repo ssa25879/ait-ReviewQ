@@ -232,7 +232,8 @@ try {
   await seed(mixed);
   const homeText = await text();
   check('오늘 복습 3장·연체 1장', homeText.includes('3장') && homeText.includes('연체 1장'), homeText.replace(/\n/g, ' ').slice(0, 80));
-  check('과목별: 영어 3장·수학 0장', (await subjectRow('영어')).includes('3장') && (await subjectRow('수학')).includes('0장'), `${await subjectRow('영어')} / ${await subjectRow('수학')}`);
+  check('과목별: 영어 오늘 3장·전체 4장, 수학 오늘 0장·전체 3장', (await subjectRow('영어')).includes('오늘 3장') && (await subjectRow('영어')).includes('전체 4장')
+    && (await subjectRow('수학')).includes('오늘 0장') && (await subjectRow('수학')).includes('전체 3장'), `${await subjectRow('영어')} / ${await subjectRow('수학')}`);
   check('과목 관리 타일 + 하단 학습 시작', (await hasButton('과목 관리')) && (await hasButton('학습 시작')));
   check('상한 안내·시계 경고 없음', !homeText.includes('내일 이어서') && !homeText.includes('기기 날짜'));
   await audit('홈'); await shot('home');

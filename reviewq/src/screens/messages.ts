@@ -1,5 +1,6 @@
 import { DAILY_LIMIT } from '../domain/queue';
 import { INTERVALS } from '../domain/scheduler/fixedInterval';
+import type { SessionProgress } from '../domain/session';
 import { CARD_TEXT_MAX, NAME_MAX, type ValidationResult } from '../domain/validation';
 
 export type Field = 'subjectName' | 'deckName' | 'question' | 'answer';
@@ -58,9 +59,21 @@ export const STUDY = {
   quitConfirm: '그만하기',
 };
 
-// 진행 표시 "1 / 3"을 스크린리더가 읽을 문장
-export function progressLabel(current: number, total: number): string {
-  return `${total}장 중 ${current}번째`;
+// 학습 세션 진행 표시. 첫 회차 "3 / 13", 다시 보기 구간 "다시 보기 1 / 3"
+export function progressText(p: SessionProgress): string {
+  return p.phase === 'retry' ? `다시 보기 ${p.current} / ${p.total}` : `${p.current} / ${p.total}`;
+}
+
+// 첫 회차에 기억 못 함으로 판정한 카드 수
+export function pendingRetryText(count: number): string {
+  return `다시 볼 카드 ${count}장`;
+}
+
+// 진행 표시를 스크린리더가 읽을 문장
+export function progressLabel(p: SessionProgress): string {
+  if (p.phase === 'retry') return `다시 보기 ${p.total}장 중 ${p.current}번째`;
+  const base = `${p.total}장 중 ${p.current}번째`;
+  return p.pendingRetry > 0 ? `${base}, ${pendingRetryText(p.pendingRetry)}` : base;
 }
 
 // 기억함 비율(%). 완료 0장이면 0

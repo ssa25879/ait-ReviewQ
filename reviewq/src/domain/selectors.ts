@@ -49,3 +49,12 @@ export function dueCountBySubject(state: ContentState, today: string): Record<st
   }
   return counts;
 }
+
+// 과목별 전체 카드 수. 오늘 복습이 0이어도 카드가 있다는 것을 보여 주는 데 쓴다
+export function cardCountBySubject(state: ContentState): Record<string, number> {
+  const counts: Record<string, number> = Object.fromEntries(state.subjects.map((s) => [s.id, 0]));
+  for (const deck of state.decks) {
+    counts[deck.subjectId] = (counts[deck.subjectId] ?? 0) + (state.cards[deck.id] ?? []).length;
+  }
+  return counts;
+}
