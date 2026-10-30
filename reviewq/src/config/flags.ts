@@ -1,7 +1,13 @@
 // 광고·알림 기능 플래그와 광고 ID. 빌드 환경 변수로 정하며 기본값은 모두 꺼짐이다.
 // 운영 광고 그룹 ID·알림 템플릿 코드는 저장소에 두지 않고 로컬 .env.production.local로만 주입한다
 
-export const TEST_BANNER_AD_GROUP_ID = 'ait-ad-test-banner-id';
+// 테스트 광고 ID는 광고를 켰지만 운영 ID를 넣지 않은 빌드(개발·QR 테스트)에만 들어가야 한다.
+// 출시 번들에 이 문자열이 있으면 쓰이지 않아도 검수에서 반려되므로, 빌드 상수 조건으로 둬서 다른 빌드에서는 번들에서 빠지게 한다
+export const TEST_BANNER_AD_GROUP_ID =
+  import.meta.env.VITE_ADS_ENABLED === 'true' &&
+  !(import.meta.env.VITE_AD_GROUP_ID_SUBJECTS && import.meta.env.VITE_AD_GROUP_ID_SESSION_DONE)
+    ? 'ait-ad-test-banner-id'
+    : '';
 
 export interface Flags {
   adsEnabled: boolean;
